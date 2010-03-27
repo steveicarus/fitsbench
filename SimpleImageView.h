@@ -20,6 +20,7 @@
  */
 
 # include  <QDialog>
+# include  <QGraphicsScene>
 # include  "ui_simple.h"
 
 class SimpleImageView : public QDialog {
@@ -27,12 +28,13 @@ class SimpleImageView : public QDialog {
       Q_OBJECT
 
     public:
-      SimpleImageView(QWidget*parent =0);
+      SimpleImageView(QWidget*parent, const QImage&image);
       ~SimpleImageView();
 
     private:
       Ui::SimpleImageView ui;
 
+      QGraphicsScene scene_;
 };
 
 #endif

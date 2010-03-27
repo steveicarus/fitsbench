@@ -24,10 +24,14 @@
 
 using namespace std;
 
-SimpleImageView::SimpleImageView(QWidget*parent)
+SimpleImageView::SimpleImageView(QWidget*parent, const QImage&image)
 : QDialog(parent)
 {
       ui.setupUi(this);
+
+      QPixmap pix = QPixmap::fromImage(image);
+      scene_.addPixmap(pix);
+      ui.graphics->setScene(&scene_);
 }
 
 SimpleImageView::~SimpleImageView()

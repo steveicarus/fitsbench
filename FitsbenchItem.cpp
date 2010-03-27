@@ -108,6 +108,55 @@ int FitsFile::read_keyn(int keynum, QString&key, QString&val, QString&com, int&s
       return rc;
 }
 
+void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&status)
+{
+      int bitpix = 0;
+      fits_get_img_equivtype(fd_, &bitpix, &status);
+
+      int naxis = 0;
+      fits_get_img_dim(fd_, &naxis, &status);
+
+      assert(naxis >= 2);
+
+      long*naxes = new long [naxis];
+      fits_get_img_size(fd_, naxis, naxes, &status);
+
+      assert(ridx == 1 || naxis >= 3 && ridx <= naxes[2]);
+      assert(gidx == 1 || naxis >= 3 && gidx <= naxes[2]);
+      assert(bidx == 1 || naxis >= 3 && bidx <= naxes[2]);
+
+      image = QImage(naxes[0], naxes[1], QImage::Format_ARGB32);
+
+      long*fpixel = new long[naxis];
+      for (int idx = 0 ; idx < naxis ; idx += 1)
+	    fpixel[idx] = 1;
+
+      unsigned char*rrow = new unsigned char [naxes[0]];
+      unsigned char*grow = new unsigned char [naxes[0]];
+      unsigned char*brow = new unsigned char [naxes[0]];
+      for (int ydx = 0 ; ydx < naxes[1] ; ydx += 1) {
+	    fpixel[1] = ydx+1;
+	    fpixel[2] = ridx;
+	    int anynul = 0;
+	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, rrow, &anynul, &status);
+	    fpixel[2] = gidx;
+	    anynul = 0;
+	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, grow, &anynul, &status);
+	    fpixel[2] = bidx;
+	    anynul = 0;
+	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, brow, &anynul, &status);
+	    for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
+		  image.setPixel(xdx, ydx, qRgba(rrow[xdx], grow[xdx], brow[xdx], 0xff));
+	    }
+      }
+      delete[]rrow;
+      delete[]grow;
+      delete[]brow;
+
+      delete[]fpixel;
+      delete[]naxes;
+}
+
 FitsFile::HDU::HDU(FitsFile*parent, int num)
 : QTreeWidgetItem(parent), hdu_num_(num)
 {
@@ -172,8 +221,17 @@ void FitsFile::HDU::preview_into_stack(QStackedWidget*wstack)
       wstack->setCurrentWidget(preview_);
 }
 
-void FitsFile::HDU::render_into_dialog(QWidget*parent)
+void FitsFile::HDU::render_into_dialog(QWidget*dialog_parent)
 {
-      SimpleImageView*tmp = new SimpleImageView(parent);
+      FitsFile*fits = dynamic_cast<FitsFile*> (parent());
+      assert(fits);
+
+      QImage image;
+      int status = 0;
+      int hdu_type = 0;
+      fits->movabs_hdu(hdu_num_, hdu_type, status);
+      fits->render_chdu(image, 1, 2, 3, status);
+
+      SimpleImageView*tmp = new SimpleImageView(dialog_parent, image);
       tmp->show();
 }

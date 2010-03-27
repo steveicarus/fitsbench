@@ -81,12 +81,22 @@ class FitsFile : public BenchFile {
       explicit FitsFile(const QString&name, const QFileInfo&path);
       ~FitsFile();
 
+	// Render the image of the current HDU into the QImage. If it
+	// is a 2D image, then render it as a grayscale image. If it
+	// is 3D, then the red, green and blue integers are indexes
+	// into the thrid dimension to select planes for an RGB
+	// rendering. Use FITS conventions for plane numberings,
+	// i.e. the first plane is 1, the second 2, etc.
+      void render_chdu(QImage&image, int red, int green, int blu, int&status);
+
     public:
 	// CFITSIO-like methods (See the cfitsio documentation)
 
 	// Move to absolute HDU
       int movabs_hdu(int hdu_num, int&hdu_type, int&status);
+	// Get number of keys in HDU
       int get_hdrspace(int&nkeys, int&morekeys, int&status);
+	// Read key from HDU
       int read_keyn(int keynum, QString&key, QString&val, QString&com, int&status);
 
     private:
