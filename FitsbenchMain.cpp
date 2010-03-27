@@ -40,6 +40,9 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 	      SLOT(action_OpenImage_slot_()));
 
       connect(ui.bench_tree,
+	      SIGNAL(itemClicked(QTreeWidgetItem*,int)),
+	      SLOT(bench_tree_clicked_slot_(QTreeWidgetItem*,int)));
+      connect(ui.bench_tree,
 	      SIGNAL(itemActivated(QTreeWidgetItem*,int)),
 	      SLOT(bench_tree_activated_slot_(QTreeWidgetItem*,int)));
 
@@ -83,6 +86,18 @@ void FitsbenchMain::action_OpenImage_slot_(void)
 	    BenchFile*item = new BenchFile(path.fileName(), path);
 	    ui.bench_tree->addTopLevelItem(item);
       }
+}
+
+/*
+ * When the user clicks on an item that can be previewed in the
+ * preview stack, have that item preview itself. Save the "activated"
+ * signal for displaying a rendering of the image.
+ */
+void FitsbenchMain::bench_tree_clicked_slot_(QTreeWidgetItem*item, int)
+{
+      Previewer*view = dynamic_cast<Previewer*> (item);
+      if (view == 0) return;
+      view->preview_into_stack(ui.preview_stack);
 }
 
 void FitsbenchMain::bench_tree_activated_slot_(QTreeWidgetItem*item, int)
