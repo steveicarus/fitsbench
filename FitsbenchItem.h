@@ -70,6 +70,7 @@ class FitsFile : public BenchFile {
 	    ~HDU();
 
 	    void preview_into_stack(QStackedWidget*);
+	    void render_into_dialog(QWidget*parent);
 
 	  private:
 	    int hdu_num_;

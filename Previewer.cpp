@@ -26,3 +26,7 @@ Previewer::Previewer()
 Previewer::~Previewer()
 {
 }
+
+void Previewer::render_into_dialog(QWidget*)
+{
+}

@@ -18,6 +18,7 @@
  */
 
 # include  "FitsbenchItem.h"
+# include  "SimpleImageView.h"
 # include  <QStackedWidget>
 # include  <QTableWidget>
 # include  <iostream>
@@ -169,4 +170,10 @@ void FitsFile::HDU::preview_into_stack(QStackedWidget*wstack)
       }
 
       wstack->setCurrentWidget(preview_);
+}
+
+void FitsFile::HDU::render_into_dialog(QWidget*parent)
+{
+      SimpleImageView*tmp = new SimpleImageView(parent);
+      tmp->show();
 }

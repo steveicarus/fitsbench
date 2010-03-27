@@ -104,7 +104,7 @@ void FitsbenchMain::bench_tree_activated_slot_(QTreeWidgetItem*item, int)
 {
       Previewer*view = dynamic_cast<Previewer*> (item);
       if (view == 0) return;
-      view->preview_into_stack(ui.preview_stack);
+      view->render_into_dialog(this);
 }
 
 void FitsbenchMain::commands_line_slot_(void)

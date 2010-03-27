@@ -6,4 +6,11 @@
 fitsbench
 Makefile
 ui_fitsbench.h
+ui_simple.h
 moc_*.cpp
+
+# Mac OS X related build files
+fitsbench.app/*
+fitsbench.xcodeproj/*
+build/*
+Info.plist

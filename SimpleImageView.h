@@ -1,5 +1,5 @@
-#ifndef __Previewer_H
-#define __Previewer_H
+#ifndef __SimpleImageView_H
+#define __SimpleImageView_H
 /*
  * Copyright (c) 2010 Stephen Williams (steve@icarus.com)
  *
@@ -19,25 +19,19 @@
  *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-class QStackedWidget;
-class QWidget;
+# include  <QDialog>
+# include  "ui_simple.h"
 
-/*
- * Objects derived from Previewer can preview themselves in a
- * QStackedWidget by creating a widget that describes themselves,
- * adding that widget to the stack, and enabling the stack.
- */
-class Previewer {
+class SimpleImageView : public QDialog {
+
+      Q_OBJECT
 
     public:
-      Previewer();
-      virtual ~Previewer() =0;
-
-      virtual void preview_into_stack(QStackedWidget*) =0;
-
-      virtual void render_into_dialog(QWidget*parent);
+      SimpleImageView(QWidget*parent =0);
+      ~SimpleImageView();
 
     private:
+      Ui::SimpleImageView ui;
 
 };
 
