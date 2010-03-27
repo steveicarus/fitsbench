@@ -1,0 +1,148 @@
+<ui version="4.0" >
+ <class>FitsbenchMainWidget</class>
+ <widget class="QMainWindow" name="FitsbenchMainWidget" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1104</width>
+    <height>668</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Fitsbench</string>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QHBoxLayout" name="horizontalLayout" >
+    <item>
+     <widget class="QSplitter" name="splitter" >
+      <property name="orientation" >
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QTreeWidget" name="bench_tree" >
+       <property name="rootIsDecorated" >
+        <bool>false</bool>
+       </property>
+       <property name="headerHidden" >
+        <bool>true</bool>
+       </property>
+       <column>
+        <property name="text" >
+         <string>1</string>
+        </property>
+       </column>
+      </widget>
+      <widget class="QWidget" name="layoutWidget" >
+       <layout class="QVBoxLayout" name="verticalLayout_3" >
+        <item>
+         <widget class="QGroupBox" name="groupBox_2" >
+          <property name="title" >
+           <string>Preview</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2" >
+           <item>
+            <widget class="QStackedWidget" name="preview_stack" >
+             <property name="currentIndex" >
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="page_2" />
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox" >
+          <property name="title" >
+           <string>Commands</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout" >
+           <property name="leftMargin" >
+            <number>2</number>
+           </property>
+           <property name="topMargin" >
+            <number>6</number>
+           </property>
+           <property name="rightMargin" >
+            <number>2</number>
+           </property>
+           <property name="bottomMargin" >
+            <number>2</number>
+           </property>
+           <item>
+            <widget class="QDialogButtonBox" name="commands_buttons" >
+             <property name="standardButtons" >
+              <set>QDialogButtonBox::Discard|QDialogButtonBox::Save</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="commands_log" >
+             <property name="acceptDrops" >
+              <bool>false</bool>
+             </property>
+             <property name="undoRedoEnabled" >
+              <bool>false</bool>
+             </property>
+             <property name="lineWrapMode" >
+              <enum>QTextEdit::NoWrap</enum>
+             </property>
+             <property name="readOnly" >
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="commands_line" >
+             <property name="statusTip" >
+              <string>Enter commands (or help)</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1104</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>File</string>
+    </property>
+    <addaction name="actionOpenFITS" />
+    <addaction name="actionOpenImage" />
+   </widget>
+   <addaction name="menuFile" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <action name="actionOpenFITS" >
+   <property name="text" >
+    <string>Open FITS...</string>
+   </property>
+  </action>
+  <action name="actionQuit" >
+   <property name="text" >
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionOpenImage" >
+   <property name="text" >
+    <string>Open Image...</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

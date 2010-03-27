@@ -1,0 +1,9 @@
+
+*~
+*.o
+
+# Generated source files
+fitsbench
+Makefile
+ui_fitsbench.h
+moc_*.cpp
