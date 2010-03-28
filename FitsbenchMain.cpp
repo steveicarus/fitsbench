@@ -45,6 +45,9 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
       connect(ui.bench_tree,
 	      SIGNAL(itemActivated(QTreeWidgetItem*,int)),
 	      SLOT(bench_tree_activated_slot_(QTreeWidgetItem*,int)));
+      connect(ui.bench_tree,
+	      SIGNAL(customContextMenuRequested(const QPoint&)),
+	      SLOT(bench_tree_custom_menu_slot_(const QPoint&)));
 
       connect(ui.commands_line,
 	      SIGNAL(returnPressed()),
@@ -105,6 +108,29 @@ void FitsbenchMain::bench_tree_activated_slot_(QTreeWidgetItem*item, int)
       Previewer*view = dynamic_cast<Previewer*> (item);
       if (view == 0) return;
       view->render_into_dialog(this);
+}
+
+void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
+{
+      QTreeWidgetItem*item = ui.bench_tree->itemAt(pos);
+      if (item == 0) return;
+
+      QAction prev ("Preview", 0);
+      QAction view ("Quick View", 0);
+      QAction clos ("Close", 0);
+      QList<QAction*> menu_list;
+      menu_list .append(&prev);
+      menu_list .append(&view);
+      menu_list .append(&clos);
+      QAction*hit = QMenu::exec(menu_list, mapToGlobal(pos), &prev, ui.bench_tree);
+
+      if (hit == &prev) {
+	    bench_tree_clicked_slot_(item, 0);
+      } else if (hit == &view) {
+	    bench_tree_activated_slot_(item, 0);
+      } else if (hit == &clos) {
+	    cerr << "XXXX clos" << endl;
+      }
 }
 
 void FitsbenchMain::commands_line_slot_(void)

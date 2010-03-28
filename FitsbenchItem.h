@@ -27,6 +27,7 @@
 # include  "Previewer.h"
 
 class QTableWidget;
+class SimpleImageView;
 
 /*
  * A FitsbenchItem is a top-level item in the bench. The main property
@@ -75,6 +76,7 @@ class FitsFile : public BenchFile {
 	  private:
 	    int hdu_num_;
 	    QTableWidget*preview_;
+	    SimpleImageView*view_;
       };
 
     public:

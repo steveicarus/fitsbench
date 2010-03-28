@@ -45,6 +45,8 @@ class FitsbenchMain : public QMainWindow {
 	// Slots to handle widget signals
       void bench_tree_clicked_slot_(QTreeWidgetItem*, int);
       void bench_tree_activated_slot_(QTreeWidgetItem*, int);
+      void bench_tree_custom_menu_slot_(const QPoint&);
+
       void commands_line_slot_(void);
 
 };

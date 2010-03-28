@@ -6,7 +6,7 @@ INCLUDEPATH += ./cfitsio
 
 FORMS += fitsbench.ui
 HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h
-SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp Previewer.cpp main.cpp
+SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp Previewer.cpp main.cpp
 
 FORMS += simple.ui
 HEADERS += SimpleImageView.h
