@@ -75,18 +75,41 @@ int FitsFile::read_keyn(int keynum, QString&key, QString&val, QString&com, int&s
       return rc;
 }
 
+/*
+ * The number of dimensions of an image. In FITS, an image can have 0
+ * dimensions (a null image), 1 dimension (an array), 2 dimensions (a
+ * grayscale image) or more.
+ */
+int FitsFile::get_img_dim(int&naxis, int&status)
+{
+      return fits_get_img_dim(fd_, &naxis, &status);
+}
+
+int FitsFile::get_img_size(std::vector<long>&naxes, int&status)
+{
+      int naxis = naxes.size();
+      long*use_naxes = new long[naxis];
+      int rc = fits_get_img_size(fd_, naxis, use_naxes, &status);
+
+      for (int idx = 0 ; idx < naxis ; idx += 1)
+	    naxes[idx] = use_naxes[idx];
+
+      delete[]use_naxes;
+      return rc;
+}
+
 void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&status)
 {
       int bitpix = 0;
       fits_get_img_equivtype(fd_, &bitpix, &status);
 
       int naxis = 0;
-      fits_get_img_dim(fd_, &naxis, &status);
+      get_img_dim(naxis, status);
 
       assert(naxis >= 2);
 
-      long*naxes = new long [naxis];
-      fits_get_img_size(fd_, naxis, naxes, &status);
+      vector<long>naxes (naxis);
+      get_img_size(naxes, status);
 
       assert(ridx == 1 || naxis >= 3 && ridx <= naxes[2]);
       assert(gidx == 1 || naxis >= 3 && gidx <= naxes[2]);
@@ -121,7 +144,6 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
       delete[]brow;
 
       delete[]fpixel;
-      delete[]naxes;
 }
 
 FitsFile::HDU::HDU(FitsFile*parent, int num)
@@ -204,7 +226,25 @@ void FitsFile::HDU::render_into_dialog(QWidget*dialog_parent)
       int status = 0;
       int hdu_type = 0;
       fits->movabs_hdu(hdu_num_, hdu_type, status);
-      fits->render_chdu(image, 1, 2, 3, status);
+
+      int naxis = 0;
+      fits->get_img_dim(naxis, status);
+
+      switch (naxis) {
+	  case 0: // NULL image
+	  case 1: // vector
+	    break;
+	  case 2: // 2D image
+	    fits->render_chdu(image, 1, 1, 1, status);
+	    break;
+	  case 3: // 3D image; treat is as 2D with chroma.
+	    fits->render_chdu(image, 1, 2, 3, status);
+	    break;
+	  default: // N-dimensional data cube. Just pick a plane and
+		   // render that.
+	    fits->render_chdu(image, 1, 1, 1, status);
+	    break;
+      }
 
       view_ = new SimpleImageView(dialog_parent, image);
       view_->show();

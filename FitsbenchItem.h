@@ -100,6 +100,10 @@ class FitsFile : public BenchFile {
       int get_hdrspace(int&nkeys, int&morekeys, int&status);
 	// Read key from HDU
       int read_keyn(int keynum, QString&key, QString&val, QString&com, int&status);
+	// Get image dimensions
+      int get_img_dim(int&naxis, int&status);
+	// Get image size
+      int get_img_size(std::vector<long>&naxes, int&status);
 
     private:
       fitsfile*fd_;
