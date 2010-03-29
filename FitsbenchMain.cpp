@@ -21,6 +21,7 @@
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
 # include  <QFileDialog>
+# include  <QInputDialog>
 # include  <QLineEdit>
 # include  <QTreeWidget>
 # include  <iostream>
@@ -59,6 +60,22 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 FitsbenchMain::~FitsbenchMain()
 {
       Tcl_DeleteInterp(tcl_engine_);
+}
+
+void FitsbenchMain::set_bench_script_name_(FitsbenchItem*item, const QString&name)
+{
+      QString old_name = item->getScriptName();
+
+      item->setScriptName(name);
+
+      if (! old_name.isNull()) {
+	    std::string tmp = old_name.toStdString();
+	    Tcl_UnsetVar2(tcl_engine_, "bench_tree", tmp.c_str(), 0);
+      }
+
+      std::string name_str = name.toStdString();
+      std::string disp_str = item->getDisplayName().toStdString();
+      Tcl_SetVar2(tcl_engine_, "bench_tree", name_str.c_str(), disp_str.c_str(), 0);
 }
 
 void FitsbenchMain::action_OpenFITS_slot_(void)
@@ -112,24 +129,39 @@ void FitsbenchMain::bench_tree_activated_slot_(QTreeWidgetItem*item, int)
 
 void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
 {
-      QTreeWidgetItem*item = ui.bench_tree->itemAt(pos);
+      QTreeWidgetItem*raw_item = ui.bench_tree->itemAt(pos);
+      if (raw_item == 0) return;
+
+      FitsbenchItem*item = dynamic_cast<FitsbenchItem*> (raw_item);
       if (item == 0) return;
 
       QAction prev ("Preview", 0);
       QAction view ("Quick View", 0);
+      QAction name ("Script Name", 0);
       QAction clos ("Close", 0);
+      clos.setEnabled(false); // Not implemented yet
+
       QList<QAction*> menu_list;
       menu_list .append(&prev);
       menu_list .append(&view);
+      menu_list .append(&name);
       menu_list .append(&clos);
+
       QAction*hit = QMenu::exec(menu_list, mapToGlobal(pos), &prev, ui.bench_tree);
 
       if (hit == &prev) {
 	    bench_tree_clicked_slot_(item, 0);
       } else if (hit == &view) {
 	    bench_tree_activated_slot_(item, 0);
+      } else if (hit == &name) {
+	    QString text = item->getScriptName();
+	    text = QInputDialog::getText(this, tr("Input Name"), 
+					 tr("Enter a unique script name"),
+					 QLineEdit::Normal, text);
+	    if (! text.isNull()) set_bench_script_name_(item, text);
+
       } else if (hit == &clos) {
-	    cerr << "XXXX clos" << endl;
+	    cerr << "XXXX Close" << endl;
       }
 }
 

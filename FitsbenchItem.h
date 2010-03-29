@@ -31,21 +31,30 @@ class SimpleImageView;
 
 /*
  * A FitsbenchItem is a top-level item in the bench. The main property
- * for this item is that it has a unique name.
+ * for this item is that it has a display name and an optional script
+ * name, and knows how to put them into the right columns. Use this
+ * class instead of the QTreeWidgetItem for any objects that go into
+ * the fits bench tree.
  */
 class FitsbenchItem  : public QTreeWidgetItem {
 
     public:
+      FitsbenchItem(FitsbenchItem*parent);
       FitsbenchItem(const QString&name);
       virtual ~FitsbenchItem() =0;
 
+      void setDisplayName(const QString&txt) { setText(0, txt); }
+      QString getDisplayName(void) const     { return text(0); }
+
+      void setScriptName(const QString&txt)  { setText(1, txt); }
+      QString getScriptName(void) const      { return text(1); }
+
     private:
-      QString name_;
 };
 
 class BenchFile : public FitsbenchItem {
 
-      class Path_ : public QTreeWidgetItem, public QFileInfo {
+      class Path_ : public FitsbenchItem, public QFileInfo {
 
 	  public:
 	    explicit Path_(const QFileInfo&path);
@@ -65,7 +74,7 @@ class BenchFile : public FitsbenchItem {
 
 class FitsFile : public BenchFile {
 
-      class HDU : public QTreeWidgetItem, public Previewer {
+      class HDU : public FitsbenchItem, public Previewer {
 	  public:
 	    explicit HDU(FitsFile*parent, int num);
 	    ~HDU();

@@ -23,6 +23,8 @@
 # include  "ui_fitsbench.h"
 # include  <tcl.h>
 
+class FitsbenchItem;
+
 class FitsbenchMain : public QMainWindow {
 
       Q_OBJECT
@@ -36,6 +38,8 @@ class FitsbenchMain : public QMainWindow {
       Ui::FitsbenchMainWidget ui;
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
+
+      void set_bench_script_name_(FitsbenchItem*item, const QString&name);
 
     private slots:
 	// Menu actions

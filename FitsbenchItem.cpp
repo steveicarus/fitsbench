@@ -27,9 +27,13 @@
 using namespace std;
 
 FitsbenchItem::FitsbenchItem(const QString&name)
-: name_(name)
 {
-      setText(0, name_);
+      setDisplayName(name);
+}
+
+FitsbenchItem::FitsbenchItem(FitsbenchItem*par)
+: QTreeWidgetItem(par)
+{
 }
 
 FitsbenchItem::~FitsbenchItem()
@@ -49,9 +53,8 @@ BenchFile::~BenchFile()
 
 
 BenchFile::Path_::Path_(const QFileInfo&path)
-: QFileInfo(path)
+: FitsbenchItem(path.filePath()), QFileInfo(path)
 {
-      setText(0, filePath());
 }
 
 BenchFile::Path_::~Path_()

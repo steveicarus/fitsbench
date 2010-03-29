@@ -24,10 +24,12 @@
 
 using namespace std;
 
-SimpleImageView::SimpleImageView(QWidget*parent, const QImage&image)
+SimpleImageView::SimpleImageView(QWidget*parent, const QImage&image, const QString&title)
 : QDialog(parent)
 {
       ui.setupUi(this);
+
+      setWindowTitle(title);
 
       QPixmap pix = QPixmap::fromImage(image);
       scene_.addPixmap(pix);

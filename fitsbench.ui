@@ -28,11 +28,43 @@
         <bool>false</bool>
        </property>
        <property name="headerHidden">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
+       <property name="columnCount">
+        <number>2</number>
+       </property>
+       <attribute name="headerVisible">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerCascadingSectionResizes">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerDefaultSectionSize">
+        <number>400</number>
+       </attribute>
+       <attribute name="headerHighlightSections">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="headerCascadingSectionResizes">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerDefaultSectionSize">
+        <number>400</number>
+       </attribute>
+       <attribute name="headerVisible">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerHighlightSections">
+        <bool>false</bool>
+       </attribute>
        <column>
         <property name="text">
-         <string>1</string>
+         <string>Workbench Object</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Script Name</string>
         </property>
        </column>
       </widget>

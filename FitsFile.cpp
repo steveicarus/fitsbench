@@ -147,7 +147,7 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
 }
 
 FitsFile::HDU::HDU(FitsFile*parent, int num)
-: QTreeWidgetItem(parent), hdu_num_(num)
+: FitsbenchItem(parent), hdu_num_(num)
 {
       view_ = 0;
       preview_ = 0;
@@ -171,7 +171,7 @@ FitsFile::HDU::HDU(FitsFile*parent, int num)
 	    name = QString("HDU %1").arg(num);
       }
 
-      setText(0, name);
+      setDisplayName(name);
 }
 
 FitsFile::HDU::~HDU()
@@ -246,6 +246,6 @@ void FitsFile::HDU::render_into_dialog(QWidget*dialog_parent)
 	    break;
       }
 
-      view_ = new SimpleImageView(dialog_parent, image);
+      view_ = new SimpleImageView(dialog_parent, image, getDisplayName());
       view_->show();
 }

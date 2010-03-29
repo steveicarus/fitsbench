@@ -28,7 +28,7 @@ class SimpleImageView : public QDialog {
       Q_OBJECT
 
     public:
-      SimpleImageView(QWidget*parent, const QImage&image);
+      SimpleImageView(QWidget*parent, const QImage&image, const QString&title);
       ~SimpleImageView();
 
     private:
