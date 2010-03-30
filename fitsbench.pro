@@ -12,6 +12,8 @@ FORMS += simple.ui
 HEADERS += SimpleImageView.h
 SOURCES += SimpleImageView.cpp
 
+SOURCES += ftcl.cpp
+
 LIBS += -ltcl
 
 TARGET = fitsbench

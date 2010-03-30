@@ -23,6 +23,7 @@
 # include  <QFileDialog>
 # include  <QInputDialog>
 # include  <QLineEdit>
+# include  <QMenu>
 # include  <QTreeWidget>
 # include  <iostream>
 
@@ -55,6 +56,8 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 	      SLOT(commands_line_slot_()));
 
       tcl_engine_ = Tcl_CreateInterp();
+
+      Tcl_CreateObjCommand(tcl_engine_, "bench", &ftcl_bench_thunk_, this, 0);
 }
 
 FitsbenchMain::~FitsbenchMain()
@@ -70,12 +73,13 @@ void FitsbenchMain::set_bench_script_name_(FitsbenchItem*item, const QString&nam
 
       if (! old_name.isNull()) {
 	    std::string tmp = old_name.toStdString();
-	    Tcl_UnsetVar2(tcl_engine_, "bench_tree", tmp.c_str(), 0);
+	    script_names_.erase(tmp);
       }
 
-      std::string name_str = name.toStdString();
-      std::string disp_str = item->getDisplayName().toStdString();
-      Tcl_SetVar2(tcl_engine_, "bench_tree", name_str.c_str(), disp_str.c_str(), 0);
+      if (! name.isNull() && ! name.isEmpty()) {
+	    std::string name_str = name.toStdString();
+	    script_names_[name_str] = item;
+      }
 }
 
 void FitsbenchMain::action_OpenFITS_slot_(void)
@@ -147,7 +151,7 @@ void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
       menu_list .append(&name);
       menu_list .append(&clos);
 
-      QAction*hit = QMenu::exec(menu_list, mapToGlobal(pos), &prev, ui.bench_tree);
+      QAction*hit = QMenu::exec(menu_list, mapToGlobal(pos), &prev);
 
       if (hit == &prev) {
 	    bench_tree_clicked_slot_(item, 0);

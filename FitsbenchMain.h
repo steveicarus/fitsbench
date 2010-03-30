@@ -36,10 +36,24 @@ class FitsbenchMain : public QMainWindow {
     private:
 	// The user interface...
       Ui::FitsbenchMainWidget ui;
+
+	// For the TCL engine, keep a map of script names to
+	// scriptables. The user manipulates this map by setting or
+	// changing the "script name" for the bench item.
+      std::map<std::string, FitsbenchItem*> script_names_;
+      void set_bench_script_name_(FitsbenchItem*item, const QString&name);
+
+    private:
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
 
-      void set_bench_script_name_(FitsbenchItem*item, const QString&name);
+	// Implementations of TCL commands...
+      int ftcl_bench_(int objc, Tcl_Obj*const objv[]);
+
+	// Stubs to convert the Tcl interpreter's call to the command
+	// back to a method of this object.
+      static int ftcl_bench_thunk_(ClientData obj, Tcl_Interp*interp,
+				   int objc, Tcl_Obj*CONST objv[]);
 
     private slots:
 	// Menu actions
