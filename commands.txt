@@ -1,0 +1,22 @@
+
+These are the script commands that ar available at the interactive
+processing window. These are TCL commands, so basic understanding of
+Tcl scripting is assumed.
+
+* axes <name>
+
+Return an ordered list of dimensions for the axes of the named
+item. For example, a 640x480 grayscale image has the axes dimensions
+"640 480". This uses the FITS definition of image axes, so
+multi-spectral images put color information in another axis. So an RGB
+color image would have axes dimensions "640 480 3".
+
+
+* bench names
+
+Get a list of the bench tree items that have script names.
+
+* bench display_text <name>
+
+Get the display string for the named item.
+

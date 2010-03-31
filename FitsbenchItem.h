@@ -49,6 +49,8 @@ class FitsbenchItem  : public QTreeWidgetItem {
       void setScriptName(const QString&txt)  { setText(1, txt); }
       QString getScriptName(void) const      { return text(1); }
 
+      virtual std::vector<long> get_axes(void) const;
+
     private:
 };
 
@@ -78,6 +80,8 @@ class FitsFile : public BenchFile {
 	  public:
 	    explicit HDU(FitsFile*parent, int num);
 	    ~HDU();
+
+	    virtual std::vector<long> get_axes(void) const;
 
 	    void preview_into_stack(QStackedWidget*);
 	    void render_into_dialog(QWidget*parent);

@@ -23,12 +23,28 @@
 
 using namespace std;
 
+FitsbenchItem* FitsbenchMain::item_from_name_(const string&name) const
+{
+      map<string,FitsbenchItem*>::const_iterator cur = script_names_.find(name);
+
+      if (cur == script_names_.end()) return 0;
+      else return cur->second;
+}
+
 int FitsbenchMain::ftcl_bench_thunk_(ClientData raw, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[])
 {
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
       assert(eng->tcl_engine_ == interp);
       return eng->ftcl_bench_(objc, objv);
+}
+
+int FitsbenchMain::ftcl_axes_thunk_(ClientData raw, Tcl_Interp*interp,
+				    int objc, Tcl_Obj*CONST objv[])
+{
+      FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
+      assert(eng->tcl_engine_ == interp);
+      return eng->ftcl_axes_(objc, objv);
 }
 
 int FitsbenchMain::ftcl_bench_(int objc, Tcl_Obj*const objv[])
@@ -57,9 +73,10 @@ int FitsbenchMain::ftcl_bench_(int objc, Tcl_Obj*const objv[])
 	    Tcl_ResetResult(tcl_engine_);
 	    for (int idx = 2 ; idx < objc ; idx += 1) {
 		  string idx_nam = Tcl_GetString(objv[idx]);
-		  map<string,FitsbenchItem*>::iterator cur = script_names_.find(idx_nam);
-		  if (cur != script_names_.end()) {
-			string text = cur->second->getDisplayName().toStdString();
+		  FitsbenchItem* item = item_from_name_(idx_nam);
+
+		  if (item) {
+			string text = item->getDisplayName().toStdString();
 			Tcl_AppendElement(tcl_engine_, text.c_str());
 		  } else {
 			Tcl_AppendElement(tcl_engine_, string("").c_str());
@@ -70,4 +87,32 @@ int FitsbenchMain::ftcl_bench_(int objc, Tcl_Obj*const objv[])
 
       Tcl_AppendResult(tcl_engine_, "Invalid subcommand: ", subcmd, 0);
       return TCL_ERROR;
+}
+
+int FitsbenchMain::ftcl_axes_(int objc, Tcl_Obj*const objv[])
+{
+      if (objc < 2) {
+	    Tcl_AppendResult(tcl_engine_, "Missing name.", 0);
+	    return TCL_ERROR;
+      }
+
+      const char*name = Tcl_GetString(objv[1]);
+      if (name == 0)
+	    return TCL_ERROR;
+
+      FitsbenchItem*item = item_from_name_(name);
+      if (item == 0)
+	    return TCL_ERROR;
+
+      vector<long> axes = item->get_axes();
+
+      Tcl_Obj*res = Tcl_NewObj();
+      for (size_t idx = 0 ; idx < axes.size() ; idx += 1) {
+	    Tcl_Obj*val = Tcl_NewLongObj(axes[idx]);
+	    Tcl_ListObjAppendElement(tcl_engine_, res, val);
+      }
+
+      Tcl_SetObjResult(tcl_engine_, res);
+
+      return TCL_OK;
 }

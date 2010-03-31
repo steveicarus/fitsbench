@@ -40,6 +40,11 @@ FitsbenchItem::~FitsbenchItem()
 {
 }
 
+vector<long> FitsbenchItem::get_axes(void) const
+{
+      return vector<long> ();
+}
+
 BenchFile::BenchFile(const QString&name, const QFileInfo&path)
 : FitsbenchItem(name)
 {

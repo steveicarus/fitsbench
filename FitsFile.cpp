@@ -180,6 +180,21 @@ FitsFile::HDU::~HDU()
       if (preview_) delete preview_;
 }
 
+vector<long> FitsFile::HDU::get_axes(void) const
+{
+      FitsFile*fits = dynamic_cast<FitsFile*> (parent());
+      assert(fits);
+
+      int status = 0;
+      int naxis = 0;
+      fits->get_img_dim(naxis, status);
+
+      vector<long>res (naxis);
+      fits->get_img_size(res, status);
+
+      return res;
+}
+
 void FitsFile::HDU::preview_into_stack(QStackedWidget*wstack)
 {
       if (preview_ == 0) {
