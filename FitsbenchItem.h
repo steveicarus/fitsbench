@@ -25,6 +25,7 @@
 # include  <vector>
 # include  <fitsio.h>
 # include  "Previewer.h"
+# include  "DataArray.h"
 
 class QTableWidget;
 class SimpleImageView;
@@ -122,6 +123,25 @@ class FitsFile : public BenchFile {
       fitsfile*fd_;
 
       std::vector<HDU*> hdu_table_;
+};
+
+/*
+ * Scratch images are work areas that the script can use to receive
+ * processing results. These images are read/write.
+ */
+class ScratchImage  : public FitsbenchItem, public DataArray {
+
+    public:
+      ScratchImage (const QString&display_name);
+      ~ScratchImage();
+
+      void reconfig(const std::vector<long>&axes, DataArray::type_t type);
+
+      std::vector<long> get_axes(void) const;
+
+    private:
+      std::vector<long> axes_;
+      DataArray::type_t type_;
 };
 
 #endif

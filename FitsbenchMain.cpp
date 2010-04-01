@@ -57,8 +57,9 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 
       tcl_engine_ = Tcl_CreateInterp();
 
-      Tcl_CreateObjCommand(tcl_engine_, "bench", &ftcl_bench_thunk_, this, 0);
-      Tcl_CreateObjCommand(tcl_engine_, "axes",  &ftcl_axes_thunk_,  this, 0);
+      Tcl_CreateObjCommand(tcl_engine_, "bench",   &ftcl_bench_thunk_,   this, 0);
+      Tcl_CreateObjCommand(tcl_engine_, "axes",    &ftcl_axes_thunk_,    this, 0);
+      Tcl_CreateObjCommand(tcl_engine_, "scratch", &ftcl_scratch_thunk_, this, 0);
 }
 
 FitsbenchMain::~FitsbenchMain()
