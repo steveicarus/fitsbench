@@ -149,8 +149,6 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
 FitsFile::HDU::HDU(FitsFile*parent, int num)
 : FitsbenchItem(parent), hdu_num_(num)
 {
-      view_ = 0;
-      preview_ = 0;
       QString name;
 
       int status = 0;
@@ -176,8 +174,6 @@ FitsFile::HDU::HDU(FitsFile*parent, int num)
 
 FitsFile::HDU::~HDU()
 {
-      if (view_) delete view_;
-      if (preview_) delete preview_;
 }
 
 vector<long> FitsFile::HDU::get_axes(void) const
@@ -195,45 +191,32 @@ vector<long> FitsFile::HDU::get_axes(void) const
       return res;
 }
 
-void FitsFile::HDU::preview_into_stack(QStackedWidget*wstack)
+void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)
 {
-      if (preview_ == 0) {
-	    FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-	    assert(fits);
+      FitsFile*fits = dynamic_cast<FitsFile*> (parent());
+      assert(fits);
 
-	    int status = 0;
-	    int hdu_type = 0;
-	    fits->movabs_hdu(hdu_num_, hdu_type, status);
+      int status = 0;
+      int hdu_type = 0;
+      fits->movabs_hdu(hdu_num_, hdu_type, status);
 
-	    int nkeys = 0;
-	    int morekeys = 0;
-	    fits->get_hdrspace(nkeys, morekeys, status);
+      int nkeys = 0;
+      int morekeys = 0;
+      fits->get_hdrspace(nkeys, morekeys, status);
 
-	    QStringList headers;
-	    headers << QString("Keyword") << QString("Value") << QString("Comments");
-	    preview_ = new QTableWidget(nkeys, 3);
-	    preview_->setHorizontalHeaderLabels(headers);
+      widget->setRowCount(nkeys);
 
-	    for (int idx = 0 ; idx < nkeys ; idx += 1) {
-		  QString key_txt, val_txt, comment_txt;
-		  fits->read_keyn(idx+1, key_txt, val_txt, comment_txt, status);
-		  preview_->setItem(idx, 0, new QTableWidgetItem(key_txt));
-		  preview_->setItem(idx, 1, new QTableWidgetItem(val_txt));
-		  preview_->setItem(idx, 2, new QTableWidgetItem(comment_txt));
-	    }
-	    wstack->addWidget(preview_);
+      for (int idx = 0 ; idx < nkeys ; idx += 1) {
+	    QString key_txt, val_txt, comment_txt;
+	    fits->read_keyn(idx+1, key_txt, val_txt, comment_txt, status);
+	    widget->setItem(idx, 0, new QTableWidgetItem(key_txt));
+	    widget->setItem(idx, 1, new QTableWidgetItem(val_txt));
+	    widget->setItem(idx, 2, new QTableWidgetItem(comment_txt));
       }
-
-      wstack->setCurrentWidget(preview_);
 }
 
-void FitsFile::HDU::render_into_dialog(QWidget*dialog_parent)
+QWidget* FitsFile::HDU::create_view_dialog(QWidget*dialog_parent)
 {
-      if (view_) {
-	    view_->show();
-	    return;
-      }
-
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
       assert(fits);
 
@@ -261,6 +244,5 @@ void FitsFile::HDU::render_into_dialog(QWidget*dialog_parent)
 	    break;
       }
 
-      view_ = new SimpleImageView(dialog_parent, image, getDisplayName());
-      view_->show();
+      return new SimpleImageView(dialog_parent, image, getDisplayName());
 }

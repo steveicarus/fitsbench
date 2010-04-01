@@ -108,7 +108,11 @@ int FitsbenchMain::ftcl_axes_(int objc, Tcl_Obj*const objv[])
       if (name == 0)
 	    return TCL_ERROR;
 
-      FitsbenchItem*item = item_from_name_(name);
+      FitsbenchItem*item_raw = item_from_name_(name);
+      if (item_raw == 0)
+	    return TCL_ERROR;
+
+      DataArray*item = dynamic_cast<DataArray*>(item_raw);
       if (item == 0)
 	    return TCL_ERROR;
 

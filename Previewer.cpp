@@ -18,15 +18,42 @@
  */
 
 # include  "Previewer.h"
+# include  <QString>
+# include  <QStackedWidget>
+# include  <QStringList>
+# include  <QTableWidget>
 
 Previewer::Previewer()
 {
+      table_ = 0;
+      view_ = 0;
 }
 
 Previewer::~Previewer()
 {
+      if (table_) delete table_;
+      if (view_) delete view_;
 }
 
-void Previewer::render_into_dialog(QWidget*)
+void Previewer::preview_into_stack(QStackedWidget*widget)
 {
+      if (table_ == 0) {
+	    table_ = new QTableWidget(0, 3);
+
+	    QStringList headers;
+	    headers << QString("Keyword") << QString("Value") << QString("Comments");
+	    table_->setHorizontalHeaderLabels(headers);
+
+	    fill_in_info_table(table_);
+
+	    widget->addWidget(table_);
+      }
+
+      widget->setCurrentWidget(table_);
+}
+
+void Previewer::render_into_dialog(QWidget*dialog_parent)
+{
+      if (view_ == 0) view_ = create_view_dialog(dialog_parent);
+      if (view_ != 0) view_->show();
 }

@@ -49,10 +49,6 @@ class FitsbenchItem  : public QTreeWidgetItem {
 
       void setScriptName(const QString&txt)  { setText(1, txt); }
       QString getScriptName(void) const      { return text(1); }
-
-      virtual std::vector<long> get_axes(void) const;
-
-    private:
 };
 
 class BenchFile : public FitsbenchItem {
@@ -77,20 +73,20 @@ class BenchFile : public FitsbenchItem {
 
 class FitsFile : public BenchFile {
 
-      class HDU : public FitsbenchItem, public Previewer {
+      class HDU : public FitsbenchItem, public Previewer, public DataArray {
 	  public:
 	    explicit HDU(FitsFile*parent, int num);
 	    ~HDU();
 
+	  public: // Implementations for DataArray
 	    virtual std::vector<long> get_axes(void) const;
 
-	    void preview_into_stack(QStackedWidget*);
-	    void render_into_dialog(QWidget*parent);
+	  protected: // Implementations for Previewer
+	    void fill_in_info_table(QTableWidget*);
+	    QWidget*create_view_dialog(QWidget*parent);
 
 	  private:
 	    int hdu_num_;
-	    QTableWidget*preview_;
-	    SimpleImageView*view_;
       };
 
     public:
@@ -127,19 +123,18 @@ class FitsFile : public BenchFile {
 
 class PnmFile : public BenchFile {
 
-      class HDU : public FitsbenchItem, public Previewer {
+      class HDU : public FitsbenchItem, public Previewer, public DataArray {
 	  public:
 	    explicit HDU(PnmFile*parent);
 	    ~HDU();
 
+	  public: // Implementations for DataArray
 	    virtual std::vector<long> get_axes(void) const;
 
-	    void preview_into_stack(QStackedWidget*);
-	    void render_into_dialog(QWidget*parent);
+	  protected: // Implementations for Previewer
+	    void fill_in_info_table(QTableWidget*);
+	    QWidget*create_view_dialog(QWidget*parent);
 
-	  private:
-	    QTableWidget*preview_;
-	    SimpleImageView*view_;
       };
 
     public:
@@ -165,7 +160,7 @@ class PnmFile : public BenchFile {
  * Scratch images are work areas that the script can use to receive
  * processing results. These images are read/write.
  */
-class ScratchImage  : public FitsbenchItem, public DataArray {
+class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
 
     public:
       ScratchImage (const QString&display_name);
@@ -173,7 +168,12 @@ class ScratchImage  : public FitsbenchItem, public DataArray {
 
       void reconfig(const std::vector<long>&axes, DataArray::type_t type);
 
+    public: // Implementations for DataArray
       std::vector<long> get_axes(void) const;
+
+    protected: // Implementations for Previewer
+      void fill_in_info_table(QTableWidget*);
+      QWidget*create_view_dialog(QWidget*parent);
 
     private:
       std::vector<long> axes_;

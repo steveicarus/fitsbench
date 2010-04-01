@@ -105,16 +105,11 @@ PnmFile::~PnmFile()
 PnmFile::HDU::HDU(PnmFile*par)
 : FitsbenchItem(par)
 {
-      view_ = 0;
-      preview_ = 0;
-
       setDisplayName("image");
 }
 
 PnmFile::HDU::~HDU()
 {
-      if (view_) delete view_;
-      if (preview_) delete preview_;
 }
 
 vector<long> PnmFile::HDU::get_axes(void) const
@@ -132,36 +127,31 @@ vector<long> PnmFile::HDU::get_axes(void) const
       return res;
 }
 
-void PnmFile::HDU::preview_into_stack(QStackedWidget*wstack)
+void PnmFile::HDU::fill_in_info_table(QTableWidget*widget)
 {
-      if (preview_ == 0) {
-	    PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
-	    assert(pnm);
+      PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
+      assert(pnm);
 
-	    QStringList headers;
-	    headers << QString("Keyword") << QString("Value");
-	    preview_ = new QTableWidget(3, 2);
-	    preview_->setHorizontalHeaderLabels(headers);
+      widget->setRowCount(3);
 
-	    QString width_txt = QString("%1").arg(pnm->width());
-	    QString height_txt = QString("%1").arg(pnm->height());
-	    QString planes_txt = QString("%1").arg(pnm->planes());
+      QString width_txt = QString("%1").arg(pnm->width());
+      QString height_txt = QString("%1").arg(pnm->height());
+      QString planes_txt = QString("%1").arg(pnm->planes());
 
-	    preview_->setItem(0, 0, new QTableWidgetItem("width"));
-	    preview_->setItem(0, 1, new QTableWidgetItem(width_txt));
+      widget->setItem(0, 0, new QTableWidgetItem("width"));
+      widget->setItem(0, 1, new QTableWidgetItem(width_txt));
+      widget->setItem(0, 2, new QTableWidgetItem(""));
 
-	    preview_->setItem(1, 0, new QTableWidgetItem("height"));
-	    preview_->setItem(1, 1, new QTableWidgetItem(height_txt));
+      widget->setItem(1, 0, new QTableWidgetItem("height"));
+      widget->setItem(1, 1, new QTableWidgetItem(height_txt));
+      widget->setItem(0, 2, new QTableWidgetItem(""));
 
-	    preview_->setItem(2, 0, new QTableWidgetItem("planes"));
-	    preview_->setItem(2, 1, new QTableWidgetItem(planes_txt));
-
-	    wstack->addWidget(preview_);
-      }
-
-      wstack->setCurrentWidget(preview_);
+      widget->setItem(2, 0, new QTableWidgetItem("planes"));
+      widget->setItem(2, 1, new QTableWidgetItem(planes_txt));
+      widget->setItem(0, 2, new QTableWidgetItem(""));
 }
 
-void PnmFile::HDU::render_into_dialog(QWidget*dial)
+QWidget* PnmFile::HDU::create_view_dialog(QWidget*)
 {
+      return 0;
 }

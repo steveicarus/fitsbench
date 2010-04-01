@@ -20,6 +20,7 @@
  */
 
 class QStackedWidget;
+class QTableWidget;
 class QWidget;
 
 /*
@@ -33,12 +34,18 @@ class Previewer {
       Previewer();
       virtual ~Previewer() =0;
 
-      virtual void preview_into_stack(QStackedWidget*) =0;
+      void preview_into_stack(QStackedWidget*);
+      void render_into_dialog(QWidget*parent);
 
-      virtual void render_into_dialog(QWidget*parent);
+    protected:
+	// The derived class implements this to refill the info table.
+      virtual void fill_in_info_table(QTableWidget*) =0;
+	// The derived class implements this to create a display dialog.
+      virtual QWidget* create_view_dialog(QWidget*dialog_parent) =0;
 
     private:
-
+      QTableWidget*table_;
+      QWidget*view_;
 };
 
 #endif

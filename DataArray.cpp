@@ -23,6 +23,11 @@ DataArray::~DataArray()
 {
 }
 
+std::vector<long> DataArray::get_axes(void) const
+{
+      return std::vector<long> ();
+}
+
 int DataArray::set_line_raw(const std::vector<long>&, long, type_t, const void*)
 {
       return -1;

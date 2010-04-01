@@ -35,13 +35,37 @@ ScratchImage::~ScratchImage()
 {
 }
 
+void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
+{
+      axes_ = axes;
+      type_ = type;
+}
+
 std::vector<long> ScratchImage::get_axes(void) const
 {
       return axes_;
 }
 
-void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
+void ScratchImage::fill_in_info_table(QTableWidget*widget)
 {
-      axes_ = axes;
-      type_ = type;
+      int nkeys = 1 + axes_.size();
+
+      widget->setRowCount(nkeys);
+
+      widget->setItem(0, 0, new QTableWidgetItem("NAXIS"));
+      widget->setItem(0, 1, new QTableWidgetItem(QString("%1").arg(axes_.size())));
+
+      for (size_t idx = 0 ; idx < axes_.size() ; idx += 1) {
+	    QString key = QString("NAXIS%1").arg(idx+1);
+	    QString val = QString("%1").arg(axes_[idx]);
+
+	    widget->setItem(1+idx, 0, new QTableWidgetItem(key));
+	    widget->setItem(1+idx, 1, new QTableWidgetItem(val));
+	    widget->setItem(1+idx, 2, new QTableWidgetItem(""));
+      }
+}
+
+QWidget* ScratchImage::create_view_dialog(QWidget*)
+{
+      return 0;
 }

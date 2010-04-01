@@ -49,6 +49,7 @@ class DataArray {
       DataArray() { }
       virtual ~DataArray() =0;
 
+      virtual std::vector<long> get_axes(void) const;
       virtual type_t get_type(void) const { return DT_VOID; }
 
       int set_line(const std::vector<long>&addr, long wid, const int8_t*data);
