@@ -124,4 +124,40 @@ class FitsFile : public BenchFile {
       std::vector<HDU*> hdu_table_;
 };
 
+class PnmFile : public BenchFile {
+
+      class HDU : public FitsbenchItem, public Previewer {
+	  public:
+	    explicit HDU(PnmFile*parent);
+	    ~HDU();
+
+	    virtual std::vector<long> get_axes(void) const;
+
+	    void preview_into_stack(QStackedWidget*);
+	    void render_into_dialog(QWidget*parent);
+
+	  private:
+	    QTableWidget*preview_;
+	    SimpleImageView*view_;
+      };
+
+    public:
+      explicit PnmFile(const QString&name, const QFileInfo&path);
+      ~PnmFile();
+
+      size_t width() const { return wid_; }
+      size_t height() const { return hei_; }
+      size_t planes() const { return pla_; }
+    private:
+      FILE*fd_;
+
+      HDU*hdu_;
+
+      size_t wid_;
+      size_t hei_;
+      size_t pla_;
+      long max_;
+      fpos_t data_; // Offset into the file where the image data lives
+};
+
 #endif

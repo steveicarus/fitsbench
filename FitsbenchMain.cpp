@@ -101,14 +101,14 @@ void FitsbenchMain::action_OpenFITS_slot_(void)
 void FitsbenchMain::action_OpenImage_slot_(void)
 {
       QString start_dir;
-      QString filter (tr("Images (*.png *.jpg *.tif *.tiff)"));
+      QString filter (tr("Images (*.pgm)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
 							start_dir, filter);
 
       for (int idx = 0 ; idx < files.size() ; idx += 1) {
 	    QFileInfo path = files.at(idx);
-	    BenchFile*item = new BenchFile(path.fileName(), path);
+	    BenchFile*item = new PnmFile(path.fileName(), path);
 	    ui.bench_tree->addTopLevelItem(item);
       }
 }
