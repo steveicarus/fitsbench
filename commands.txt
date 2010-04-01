@@ -20,3 +20,9 @@ Get a list of the bench tree items that have script names.
 
 Get the display string for the named item.
 
+
+* scratch new <name> <display-name> <type> <axes-list>
+
+Create a new scratch image with the script name <name>. Use
+<display-name> as the name to display, and create an image with the
+<axes-list> dimensions.
