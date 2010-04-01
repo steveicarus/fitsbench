@@ -143,14 +143,18 @@ void PnmFile::HDU::preview_into_stack(QStackedWidget*wstack)
 	    preview_ = new QTableWidget(3, 2);
 	    preview_->setHorizontalHeaderLabels(headers);
 
+	    QString width_txt = QString("%1").arg(pnm->width());
+	    QString height_txt = QString("%1").arg(pnm->height());
+	    QString planes_txt = QString("%1").arg(pnm->planes());
+
 	    preview_->setItem(0, 0, new QTableWidgetItem("width"));
-	    preview_->setItem(0, 1, new QTableWidgetItem(pnm->width()));
+	    preview_->setItem(0, 1, new QTableWidgetItem(width_txt));
 
 	    preview_->setItem(1, 0, new QTableWidgetItem("height"));
-	    preview_->setItem(1, 1, new QTableWidgetItem(pnm->height()));
+	    preview_->setItem(1, 1, new QTableWidgetItem(height_txt));
 
 	    preview_->setItem(2, 0, new QTableWidgetItem("planes"));
-	    preview_->setItem(3, 1, new QTableWidgetItem(pnm->planes()));
+	    preview_->setItem(2, 1, new QTableWidgetItem(planes_txt));
 
 	    wstack->addWidget(preview_);
       }
