@@ -102,7 +102,7 @@ void FitsbenchMain::action_OpenFITS_slot_(void)
 void FitsbenchMain::action_OpenImage_slot_(void)
 {
       QString start_dir;
-      QString filter (tr("Images (*.pgm)"));
+      QString filter (tr("Images (*.pgm *.ppm)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
 							start_dir, filter);

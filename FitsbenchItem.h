@@ -149,6 +149,9 @@ class PnmFile : public BenchFile {
       size_t planes() const { return pla_; }
       long  datamax() const { return max_; }
 
+	// Bytes per value
+      size_t bpv() const { return max_ >= 256? 2 : 1; }
+
 	// The HDU implementation of get_line_raw redirects here.
       int get_line_raw(const std::vector<long>&addr, long wid,
 		       DataArray::type_t pixtype, void*data);
@@ -160,9 +163,12 @@ class PnmFile : public BenchFile {
 
       size_t wid_;
       size_t hei_;
-      size_t pla_;
+      size_t pla_; // Pixel planes (1 or 3)
       long max_;
       fpos_t data_; // Offset into the file where the image data lives
+
+      long cache_y_;
+      uint8_t*cache_;
 };
 
 /*

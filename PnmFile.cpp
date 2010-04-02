@@ -22,6 +22,7 @@
 # include  <QStackedWidget>
 # include  <QTableWidget>
 # include  <iostream>
+# include  <byteswap.h>
 # include  <assert.h>
 
 using namespace std;
@@ -59,8 +60,11 @@ PnmFile::PnmFile(const QString&name, const QFileInfo&path)
       chr = fgetc(fd_);
       assert(chr == 'P');
       chr = fgetc(fd_);
-      assert(chr == '5');
-      pla_ = 1;
+      assert(chr == '5' || chr == '6');
+      if (chr == '5')
+	    pla_ = 1;
+      else
+	    pla_ = 3;
 
       chr = next_word(fd_);
 
@@ -94,11 +98,15 @@ PnmFile::PnmFile(const QString&name, const QFileInfo&path)
 
       fgetpos(fd_, &data_);
 
+      cache_y_ = -1;
+      cache_ = new uint8_t[wid_ * pla_ * bpv()];
+
       hdu_ = new HDU(this);
 }
 
 PnmFile::~PnmFile()
 {
+      if (cache_) delete[]cache_;
       fclose(fd_);
 }
 
@@ -138,17 +146,115 @@ int PnmFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
 int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 			  DataArray::type_t pixtype, void*data)
 {
-      assert(pixtype == DataArray::DT_UINT8);
+      int rc;
 
-      long offset = addr[1] * wid_ * pla_ + addr[0];
+	// PNM files are either 8bit or 16bit unsigned. Make sure the
+	// requested type is compatible with the actual image
+	// format. It is up to the caller to do any conversions if
+	// necessary.
 
-      memset(data, 0, wid);
-      fsetpos(fd_, &data_);
-      fseek(fd_, offset, SEEK_CUR);
-      size_t rc = fread(data, 1, wid, fd_);
-      assert(rc == wid);
+      if (bpv() == 1 && pixtype != DataArray::DT_UINT8)
+	    return -1;
 
-      return 0;
+      if (bpv() == 2 && pixtype != DataArray::DT_UINT16)
+	    return -1;
+
+	// Get the desired line into the cache, if not already there.
+      if (cache_y_ != addr[1]) {
+	      // Calculate the offset into the data section of the pnm
+	      // file, and seek. This gets the read pointer to the
+	      // addressed start pixel.
+	    long offset = addr[1] * wid_ * pla_ * bpv();
+
+	    rc = fsetpos(fd_, &data_);
+	    if (rc < 0) return rc;
+
+	    rc = fseek(fd_, offset, SEEK_CUR);
+	    if (rc < 0) return rc;
+
+	    size_t cnt = fread(cache_, bpv(), wid_*pla_, fd_);
+	    assert(cnt == (size_t)(wid*pla_));
+
+	    cache_y_ = addr[1];
+      }
+
+      if (bpv() == 1 && pla_ == 1) {
+
+	      // Easiest case, the PNM file is 8bit gray. Read the
+	      // data directly into the destination buffer.
+	    assert(pixtype == DataArray::DT_UINT8);
+
+	    uint8_t*src = cache_ + addr[0];
+	    memcpy(data, src, wid);
+	    return 0;
+
+      } else if (bpv() == 1 && pla_ == 3) {
+
+	      // Color PNM files are stored with the planes
+	      // interleaved at the pixel level. Extract the plane
+	      // that we want.
+	    assert(pixtype == DataArray::DT_UINT8);
+	    assert(addr.size() == 3 && addr[2] < 3);
+
+	    uint8_t*dst = reinterpret_cast<uint8_t*> (data);
+	    uint8_t*src = cache_ + addr[0] * pla_ + addr[2];
+	    for (int idx = 0 ; idx < wid ; idx += 1) {
+		  *dst = *src;
+		  dst += 1;
+		  src += 3;
+	    }
+
+	    return 0;
+
+      } else if (bpv() == 2 && pla_ == 1) {
+
+	    assert(pixtype == DataArray::DT_UINT16);
+
+	    uint16_t*dst = reinterpret_cast<uint16_t*> (data);
+	    uint16_t*src = reinterpret_cast<uint16_t*> (cache_) + addr[0];
+
+	      // PNM RAW files are big-endian, but we return values in
+	      // arrays of native values. Do a conversion if necessary.
+	    if (QSysInfo::ByteOrder != QSysInfo::BigEndian) {
+		  for (int idx = 0 ; idx < wid ; idx += 1) {
+			*dst = bswap_16(*src);
+			src += 1;
+			dst += 1;
+		  }
+	    } else {
+		  memcpy(dst, cache_, wid*bpv());
+	    }
+
+	    return 0;
+
+      } else if (bpv() == 2 && pla_ == 3) {
+
+	    assert(pixtype == DataArray::DT_UINT16);
+	    assert(addr.size() == 3 && addr[2] < 3);
+
+	    uint16_t*dst = reinterpret_cast<uint16_t*> (data);
+	    uint16_t*src = reinterpret_cast<uint16_t*> (cache_) + addr[0]*pla_;
+
+	    src += addr[2];
+	    if (QSysInfo::ByteOrder != QSysInfo::BigEndian) {
+		  for (int idx = 0 ; idx < wid ; idx += 1) {
+			*dst = bswap_16(*src);
+			dst += 1;
+			src += 3;
+		  }
+	    } else {
+		  for (int idx = 0 ; idx < wid ; idx += 1) {
+			*dst = *src;
+			dst += 1;
+			src += 3;
+		  }
+	    }
+
+	    return 0;
+      }
+
+	// Unexpected format?
+      return -1;
 }
 
 
@@ -216,26 +322,42 @@ QWidget* PnmFile::HDU::create_view_dialog(QWidget*dialog_parent)
 {
       vector<long> axes = get_axes();
 
-	// For now, only support gray.
-      if (axes.size() > 2) return 0;
-
       long wid = axes[0];
 
       QImage image (axes[0], axes[1], QImage::Format_ARGB32);
 
-      uint8_t*row = new uint8_t[wid];
-      vector<long> addr (2);
+      uint8_t*rowr = new uint8_t[wid];
+      uint8_t*rowg, *rowb;
+      if (axes.size() > 2) {
+	    rowg = new uint8_t[wid];
+	    rowb = new uint8_t[wid];
+      } else {
+	    rowg = rowr;
+	    rowb = rowr;
+      }
+
+      vector<long> addr (axes.size());
       addr[0] = 0;
+      if (addr.size() > 2) addr[2] = 0;
 
       for (addr[1] = 0 ; addr[1] < axes[1] ; addr[1] += 1) {
-	    memset(row, 0xaa, wid);
-	    get_line(addr, wid, row);
 
+	    get_line(addr, wid, rowr);
+	    if (rowg != rowr) {
+		  addr[2] = 1;
+		  get_line(addr, wid, rowg);
+		  addr[2] = 2;
+		  get_line(addr, wid, rowb);
+		  addr[2] = 0;
+	    }
 	    for (int idx = 0 ; idx < axes[0] ; idx += 1) {
-		  image.setPixel(idx, addr[1], qRgba(row[idx], row[idx], row[idx], 0xff));
+		  image.setPixel(idx, addr[1], qRgba(rowr[idx], rowg[idx], rowb[idx], 0xff));
 	    }
       }
-      delete[]row;
+
+      if (rowb != rowr) delete[]rowb;
+      if (rowg != rowr) delete[]rowg;
+      delete[]rowr;
 
       return new SimpleImageView(dialog_parent, image, getDisplayName());
 }
