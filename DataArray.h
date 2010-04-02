@@ -108,24 +108,24 @@ inline int DataArray::set_line(const std::vector<long>&addr, long wid, const dou
 { return set_line_raw(addr, wid, DT_DOUBLE, data); }
 
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, int8_t*data)
-{ return set_line_raw(addr, wid, DT_INT8, data); }
+{ return get_line_raw(addr, wid, DT_INT8, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, int16_t*data)
-{ return set_line_raw(addr, wid, DT_INT16, data); }
+{ return get_line_raw(addr, wid, DT_INT16, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, int32_t*data)
-{ return set_line_raw(addr, wid, DT_INT32, data); }
+{ return get_line_raw(addr, wid, DT_INT32, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, int64_t*data)
-{ return set_line_raw(addr, wid, DT_INT64, data); }
+{ return get_line_raw(addr, wid, DT_INT64, data); }
 
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, uint8_t*data)
-{ return set_line_raw(addr, wid, DT_UINT8, data); }
+{ return get_line_raw(addr, wid, DT_UINT8, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, uint16_t*data)
-{ return set_line_raw(addr, wid, DT_UINT16, data); }
+{ return get_line_raw(addr, wid, DT_UINT16, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, uint32_t*data)
-{ return set_line_raw(addr, wid, DT_UINT32, data); }
+{ return get_line_raw(addr, wid, DT_UINT32, data); }
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, uint64_t*data)
-{ return set_line_raw(addr, wid, DT_UINT64, data); }
+{ return get_line_raw(addr, wid, DT_UINT64, data); }
 
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, double*data)
-{ return set_line_raw(addr, wid, DT_DOUBLE, data); }
+{ return get_line_raw(addr, wid, DT_DOUBLE, data); }
 
 #endif

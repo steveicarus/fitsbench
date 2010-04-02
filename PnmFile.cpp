@@ -127,31 +127,115 @@ vector<long> PnmFile::HDU::get_axes(void) const
       return res;
 }
 
+int PnmFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
+			       type_t pixtype, void*data)
+{
+      PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
+      assert(pnm);
+      return pnm->get_line_raw(addr, wid, pixtype, data);
+}
+
+int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
+			  DataArray::type_t pixtype, void*data)
+{
+      assert(pixtype == DataArray::DT_UINT8);
+
+      long offset = addr[1] * wid_ * pla_ + addr[0];
+
+      memset(data, 0, wid);
+      fsetpos(fd_, &data_);
+      fseek(fd_, offset, SEEK_CUR);
+      size_t rc = fread(data, 1, wid, fd_);
+      assert(rc == wid);
+
+      return 0;
+}
+
+
+/*
+ * Describe a PNM file like this:
+ *
+ *   BITPIX  8/16
+ *   DATAMIN 0
+ *   DATAMAX max
+ *   NAXIS   2/3
+ *   NAXIS1  width
+ *   NAXIS2  height
+ *   NAXIS3  3
+ */
 void PnmFile::HDU::fill_in_info_table(QTableWidget*widget)
 {
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
       assert(pnm);
 
-      widget->setRowCount(3);
+      int nkeys = 6;
+      if (pnm->planes() > 1) nkeys += 1;
 
-      QString width_txt = QString("%1").arg(pnm->width());
+      widget->setRowCount(nkeys);
+
+      long datamax = pnm->datamax();
+
+      QString bitpix_txt = datamax >= 256? "16" : "8";
+      QString datamax_txt= QString("%1").arg(datamax);
+      QString width_txt  = QString("%1").arg(pnm->width());
       QString height_txt = QString("%1").arg(pnm->height());
       QString planes_txt = QString("%1").arg(pnm->planes());
 
-      widget->setItem(0, 0, new QTableWidgetItem("width"));
-      widget->setItem(0, 1, new QTableWidgetItem(width_txt));
+      widget->setItem(0, 0, new QTableWidgetItem("BITPIX"));
+      widget->setItem(0, 1, new QTableWidgetItem(bitpix_txt));
       widget->setItem(0, 2, new QTableWidgetItem(""));
 
-      widget->setItem(1, 0, new QTableWidgetItem("height"));
-      widget->setItem(1, 1, new QTableWidgetItem(height_txt));
-      widget->setItem(0, 2, new QTableWidgetItem(""));
+      widget->setItem(1, 0, new QTableWidgetItem("DATAMIN"));
+      widget->setItem(1, 1, new QTableWidgetItem("0"));
+      widget->setItem(1, 2, new QTableWidgetItem(""));
 
-      widget->setItem(2, 0, new QTableWidgetItem("planes"));
-      widget->setItem(2, 1, new QTableWidgetItem(planes_txt));
-      widget->setItem(0, 2, new QTableWidgetItem(""));
+      widget->setItem(2, 0, new QTableWidgetItem("DATAMAX"));
+      widget->setItem(2, 1, new QTableWidgetItem(datamax_txt));
+      widget->setItem(2, 2, new QTableWidgetItem(""));
+
+      widget->setItem(3, 0, new QTableWidgetItem("NAXIS"));
+      widget->setItem(3, 1, new QTableWidgetItem(pnm->planes()>1? "3" : "2"));
+      widget->setItem(3, 2, new QTableWidgetItem(""));
+
+      widget->setItem(4, 0, new QTableWidgetItem("NAXIS1"));
+      widget->setItem(4, 1, new QTableWidgetItem(width_txt));
+      widget->setItem(4, 2, new QTableWidgetItem(""));
+
+      widget->setItem(5, 0, new QTableWidgetItem("NAXIS2"));
+      widget->setItem(5, 1, new QTableWidgetItem(height_txt));
+      widget->setItem(5, 2, new QTableWidgetItem(""));
+
+      if (pnm->planes() > 1) {
+	    widget->setItem(6, 0, new QTableWidgetItem("NAXIS3"));
+	    widget->setItem(6, 1, new QTableWidgetItem(planes_txt));
+	    widget->setItem(6, 2, new QTableWidgetItem("RED, GREEN, BLUE"));
+      }
 }
 
-QWidget* PnmFile::HDU::create_view_dialog(QWidget*)
+QWidget* PnmFile::HDU::create_view_dialog(QWidget*dialog_parent)
 {
-      return 0;
+      vector<long> axes = get_axes();
+
+	// For now, only support gray.
+      if (axes.size() > 2) return 0;
+
+      long wid = axes[0];
+
+      QImage image (axes[0], axes[1], QImage::Format_ARGB32);
+
+      uint8_t*row = new uint8_t[wid];
+      vector<long> addr (2);
+      addr[0] = 0;
+
+      for (addr[1] = 0 ; addr[1] < axes[1] ; addr[1] += 1) {
+	    memset(row, 0xaa, wid);
+	    get_line(addr, wid, row);
+
+	    for (int idx = 0 ; idx < axes[0] ; idx += 1) {
+		  image.setPixel(idx, addr[1], qRgba(row[idx], row[idx], row[idx], 0xff));
+	    }
+      }
+      delete[]row;
+
+      return new SimpleImageView(dialog_parent, image, getDisplayName());
 }

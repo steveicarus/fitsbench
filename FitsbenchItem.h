@@ -131,6 +131,9 @@ class PnmFile : public BenchFile {
 	  public: // Implementations for DataArray
 	    virtual std::vector<long> get_axes(void) const;
 
+	    int get_line_raw(const std::vector<long>&addr, long wid,
+			     type_t pixtype, void*data);
+
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
 	    QWidget*create_view_dialog(QWidget*parent);
@@ -144,6 +147,12 @@ class PnmFile : public BenchFile {
       size_t width() const { return wid_; }
       size_t height() const { return hei_; }
       size_t planes() const { return pla_; }
+      long  datamax() const { return max_; }
+
+	// The HDU implementation of get_line_raw redirects here.
+      int get_line_raw(const std::vector<long>&addr, long wid,
+		       DataArray::type_t pixtype, void*data);
+
     private:
       FILE*fd_;
 
