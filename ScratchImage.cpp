@@ -27,16 +27,37 @@
 using namespace std;
 
 ScratchImage::ScratchImage(const QString&disp_name)
-: FitsbenchItem(disp_name)
+: FitsbenchItem(disp_name), type_(DT_VOID)
 {
 }
 
 ScratchImage::~ScratchImage()
 {
+      delete_by_type_();
 }
 
+void ScratchImage::delete_by_type_(void)
+{
+      switch (type_) {
+	  case DT_VOID:
+	    break;
+	  case DT_DOUBLE:
+	    if (array_dbl_) delete[]array_dbl_;
+	    array_dbl_ = 0;
+	    break;
+	  case DT_UINT8:
+	    if (array_uint8_) delete[]array_uint8_;
+	    break;
+	  default:
+	    assert(0);
+	    break;
+      }
+}
+
+	    
 void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
 {
+      delete_by_type_();
       axes_ = axes;
       type_ = type;
 }
@@ -44,6 +65,51 @@ void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
 std::vector<long> ScratchImage::get_axes(void) const
 {
       return axes_;
+}
+
+DataArray::type_t ScratchImage::get_type(void) const
+{
+      return type_;
+}
+
+template <> inline double*ScratchImage::get_array_<double>(void)
+{
+      if (array_dbl_ == 0) {
+	    array_dbl_ = new double [get_pixel_count(axes_)];
+	    assert(array_dbl_);
+      }
+      return array_dbl_;
+}
+
+template <class T> int ScratchImage::do_set_line_(size_t off, long wid, const T*src)
+{
+      T*dst = get_array_<T>() + off;
+      for (int idx = 0 ; idx < wid ; idx += 1)
+	    *dst++ = *src++;
+      return 0;
+}
+
+int ScratchImage::set_line_raw(const std::vector<long>&addr, long wid,
+			       DataArray::type_t type, const void*data)
+{
+      assert(addr.size() == axes_.size());
+      assert(type == type_);
+
+      size_t off = addr[0];
+      size_t dim_siz = axes_[0];
+      for (size_t idx = 1 ; idx < axes_.size() ; idx += 1) {
+	    off += dim_siz * addr[idx];
+	    dim_siz *= axes_[idx];
+      }
+
+      switch (type) {
+	  case DT_DOUBLE:
+	    return do_set_line_(off, wid, reinterpret_cast<const double*>(data));
+	    break;
+	  default:
+	    assert(0);
+	    return -1;
+      }
 }
 
 void ScratchImage::fill_in_info_table(QTableWidget*widget)

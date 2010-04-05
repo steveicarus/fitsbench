@@ -28,12 +28,12 @@ std::vector<long> DataArray::get_axes(void) const
       return std::vector<long> ();
 }
 
-int DataArray::set_line_raw(const std::vector<long>&, long, type_t, const void*)
+int DataArray::get_line_raw(const std::vector<long>&, long, type_t, void*)
 {
       return -1;
 }
 
-int DataArray::get_line_raw(const std::vector<long>&, long, type_t, void*)
+int DataArray::set_line_raw(const std::vector<long>&, long, type_t, const void*)
 {
       return -1;
 }
@@ -65,4 +65,15 @@ DataArray::type_t DataArray::type_from_string(const std::string&str)
       }
 
       return DT_VOID;
+}
+
+size_t DataArray::get_pixel_count(const std::vector<long>&axes)
+{
+      if (axes.size() == 0) return 0;
+
+      size_t count = 1;
+      for (size_t idx = 0 ; idx < axes.size() ; idx += 1)
+	    count *= axes[idx];
+
+      return count;
 }

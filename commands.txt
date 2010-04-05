@@ -26,3 +26,18 @@ Get the display string for the named item.
 Create a new scratch image with the script name <name>. Use
 <display-name> as the name to display, and create an image with the
 <axes-list> dimensions.
+
+* fft2d <dest> <src> <axes-list>
+
+Do a FFT 2D using a plane of data from the <src> image starting at the
+point at <axes-list>. Put the result into <dest>. The destination
+image must be a 2D image (2 axes) of complex. If the destination image
+doesn't exist, it will be created as a scratch image with the right
+characteristics.
+
+* phase_correlate <dest> <src1> <src2>
+
+Do a phase correlation of the <src1> and <src2> images, and put the
+resulting image into <dest>. The <src1> and <src2> images must have
+the same type and dimensions. The <dest> image will have the same
+dimensions but a type of native double.

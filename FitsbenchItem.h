@@ -80,6 +80,7 @@ class FitsFile : public BenchFile {
 
 	  public: // Implementations for DataArray
 	    virtual std::vector<long> get_axes(void) const;
+	    type_t get_type(void) const;
 
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
@@ -114,6 +115,9 @@ class FitsFile : public BenchFile {
       int get_img_dim(int&naxis, int&status);
 	// Get image size
       int get_img_size(std::vector<long>&naxes, int&status);
+	// Get image type
+      int get_img_type(int&bitpix, int&status);
+      int get_img_equivtype(int&bitpix, int&status);
 
     private:
       fitsfile*fd_;
@@ -129,7 +133,8 @@ class PnmFile : public BenchFile {
 	    ~HDU();
 
 	  public: // Implementations for DataArray
-	    virtual std::vector<long> get_axes(void) const;
+	    std::vector<long> get_axes(void) const;
+	    type_t get_type(void) const;
 
 	    int get_line_raw(const std::vector<long>&addr, long wid,
 			     type_t pixtype, void*data);
@@ -185,6 +190,13 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
 
     public: // Implementations for DataArray
       std::vector<long> get_axes(void) const;
+      DataArray::type_t get_type(void) const;
+
+      int set_line_raw(const std::vector<long>&addr, long wid,
+		       DataArray::type_t type, const void*data);
+
+    private:
+      template <class T> int do_set_line_(size_t off, long wid, const T*data);
 
     protected: // Implementations for Previewer
       void fill_in_info_table(QTableWidget*);
@@ -193,6 +205,14 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
     private:
       std::vector<long> axes_;
       DataArray::type_t type_;
+
+      void delete_by_type_(void);
+
+      template <class T> T*get_array_(void);
+      union {
+	    uint8_t*array_uint8_;
+	    double*array_dbl_;
+      };
 };
 
 #endif

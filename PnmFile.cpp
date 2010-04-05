@@ -22,8 +22,14 @@
 # include  <QStackedWidget>
 # include  <QTableWidget>
 # include  <iostream>
-# include  <byteswap.h>
 # include  <assert.h>
+
+#if defined(Q_WS_MAC)
+static inline uint16_t bswap_16(uint16_t val)
+{ return (val >> 6) | (val << 8); }
+#else
+# include  <byteswap.h>
+#endif
 
 using namespace std;
 
@@ -125,7 +131,6 @@ vector<long> PnmFile::HDU::get_axes(void) const
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
       assert(pnm);
 
-
       vector<long> res (pnm->planes()==1? 2 : 3);
 
       res[0] = pnm->width();
@@ -133,6 +138,17 @@ vector<long> PnmFile::HDU::get_axes(void) const
       if (pnm->planes() != 1) res[2] = pnm->planes();
 
       return res;
+}
+
+DataArray::type_t PnmFile::HDU::get_type(void) const
+{
+      PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
+      assert(pnm);
+
+      if (pnm->datamax() >= 256)
+	    return DT_UINT16;
+
+      return DT_UINT8;
 }
 
 int PnmFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,

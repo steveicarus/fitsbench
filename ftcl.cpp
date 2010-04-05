@@ -31,6 +31,22 @@ FitsbenchItem* FitsbenchMain::item_from_name_(const string&name) const
       else return cur->second;
 }
 
+vector<long> FitsbenchMain::vector_from_listobj_(Tcl_Obj*obj)
+{
+      Tcl_Obj**axes_objv = 0;
+      int axes_objc = 0;
+      Tcl_ListObjGetElements(tcl_engine_, obj, &axes_objc, &axes_objv);
+
+      vector<long> axes (axes_objc);
+      for (int idx = 0 ; idx < axes_objc ; idx += 1) {
+	    long tmp;
+	    Tcl_GetLongFromObj(tcl_engine_, axes_objv[idx],  &tmp);
+	    axes[idx] = tmp;
+      }
+
+      return axes;
+}
+
 int FitsbenchMain::ftcl_bench_thunk_(ClientData raw, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[])
 {
@@ -151,16 +167,7 @@ int FitsbenchMain::ftcl_scratch_(int objc, Tcl_Obj*const objv[])
 	    string type_str = Tcl_GetString(objv[4]);
 	    DataArray::type_t type = DataArray::type_from_string(type_str);
 
-	    Tcl_Obj**axes_objv = 0;
-	    int axes_objc = 0;
-	    Tcl_ListObjGetElements(tcl_engine_, objv[5], &axes_objc, &axes_objv);
-
-	    vector<long> axes (axes_objc);
-	    for (int idx = 0 ; idx < axes_objc ; idx += 1) {
-		  long tmp;
-		  Tcl_GetLongFromObj(tcl_engine_, axes_objv[idx],  &tmp);
-		  axes[idx] = tmp;
-	    }
+	    vector<long> axes = vector_from_listobj_(objv[5]);
 
 	    ScratchImage*item = new ScratchImage(disp_name);
 	    ui.bench_tree->addTopLevelItem(item);

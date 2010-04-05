@@ -51,10 +51,14 @@ class FitsbenchMain : public QMainWindow {
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
 
+      std::vector<long> vector_from_listobj_(Tcl_Obj*obj);
+
 	// Implementations of TCL commands...
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);
       int ftcl_axes_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_fft2d_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_phase_corr_(int objc, Tcl_Obj*const objv[]);
 
 	// Stubs to convert the Tcl interpreter's call to the command
 	// back to a method of this object.
@@ -64,6 +68,14 @@ class FitsbenchMain : public QMainWindow {
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_fft2d_thunk_(ClientData obj, Tcl_Interp*interp,
+				     int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_phase_corr_thunk_(ClientData obj, Tcl_Interp*interp,
+					int objc, Tcl_Obj*CONST objv[]);
+      static const struct ftcl_command_table {
+	    const char*name;
+	    int (*thunk) (ClientData, Tcl_Interp*, int objc, Tcl_Obj*CONST objv[]);
+      } ftcl_commands[];
 
     private slots:
 	// Menu actions

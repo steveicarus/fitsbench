@@ -84,6 +84,9 @@ class DataArray {
       virtual int get_line_raw(const std::vector<long>&addr, long wid,
 			       type_t type, void*data);
 
+    public:
+      static size_t get_pixel_count(const std::vector<long>&axes);
+
 };
 
 inline int DataArray::set_line(const std::vector<long>&addr, long wid, const int8_t*data)
@@ -106,6 +109,9 @@ inline int DataArray::set_line(const std::vector<long>&addr, long wid, const uin
 
 inline int DataArray::set_line(const std::vector<long>&addr, long wid, const double*data)
 { return set_line_raw(addr, wid, DT_DOUBLE, data); }
+
+inline int DataArray::set_line(const std::vector<long>&addr, long wid, const std::complex<double>*data)
+{ return set_line_raw(addr, wid, DT_COMPLEX, data); }
 
 inline int DataArray::get_line(const std::vector<long>&addr, long wid, int8_t*data)
 { return get_line_raw(addr, wid, DT_INT8, data); }

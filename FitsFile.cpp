@@ -98,6 +98,16 @@ int FitsFile::get_img_size(std::vector<long>&naxes, int&status)
       return rc;
 }
 
+int FitsFile::get_img_type(int&bitpix, int&status)
+{
+      return fits_get_img_type(fd_, &bitpix, &status);
+}
+
+int FitsFile::get_img_equivtype(int&bitpix, int&status)
+{
+      return fits_get_img_equivtype(fd_, &bitpix, &status);
+}
+
 void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&status)
 {
       int bitpix = 0;
@@ -189,6 +199,29 @@ vector<long> FitsFile::HDU::get_axes(void) const
       fits->get_img_size(res, status);
 
       return res;
+}
+
+DataArray::type_t FitsFile::HDU::get_type(void) const
+{
+      FitsFile*fits = dynamic_cast<FitsFile*> (parent());
+      assert(fits);
+
+      int status = 0;
+      int bitpix = 0;
+      fits->get_img_equivtype(bitpix, status);
+
+      switch (bitpix) {
+	  case BYTE_IMG: return DT_UINT8;
+	  case SBYTE_IMG: return DT_INT8;
+	  case SHORT_IMG: return DT_INT16;
+	  case USHORT_IMG: return DT_UINT16;
+	  case LONG_IMG: return DT_INT32;
+	  case ULONG_IMG: return DT_UINT32;
+	  case LONGLONG_IMG: return DT_INT64;
+	  case FLOAT_IMG: return DT_FLOAT32;
+	  case DOUBLE_IMG: return DT_FLOAT64;
+	  default: return DT_VOID;
+      }
 }
 
 void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)

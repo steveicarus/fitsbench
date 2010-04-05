@@ -29,6 +29,14 @@
 
 using namespace std;
 
+const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
+      { "axes",            &FitsbenchMain::ftcl_axes_thunk_ },
+      { "bench",           &FitsbenchMain::ftcl_bench_thunk_ },
+      { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },
+      { "scratch",         &FitsbenchMain::ftcl_scratch_thunk_ },
+      { 0, 0}
+};
+
 FitsbenchMain::FitsbenchMain(QWidget*parent)
 : QMainWindow(parent)
 {
@@ -57,9 +65,10 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 
       tcl_engine_ = Tcl_CreateInterp();
 
-      Tcl_CreateObjCommand(tcl_engine_, "bench",   &ftcl_bench_thunk_,   this, 0);
-      Tcl_CreateObjCommand(tcl_engine_, "axes",    &ftcl_axes_thunk_,    this, 0);
-      Tcl_CreateObjCommand(tcl_engine_, "scratch", &ftcl_scratch_thunk_, this, 0);
+      for (int idx = 0 ; ftcl_commands[idx].name ; idx += 1)
+	    Tcl_CreateObjCommand(tcl_engine_, ftcl_commands[idx].name,
+				 ftcl_commands[idx].thunk,
+				 this, 0);
 }
 
 FitsbenchMain::~FitsbenchMain()

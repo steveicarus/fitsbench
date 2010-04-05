@@ -1,8 +1,8 @@
 
 CONFIG += qt
 
-LIBS += ./cfitsio/libcfitsio.a
-INCLUDEPATH += ./cfitsio
+LIBS += ./sub/lib/libcfitsio.a ./sub/lib/libfftw3.a
+INCLUDEPATH += ./sub/include
 
 FORMS += fitsbench.ui
 
@@ -13,7 +13,7 @@ FORMS += simple.ui
 HEADERS += SimpleImageView.h
 SOURCES += SimpleImageView.cpp
 
-SOURCES += ftcl.cpp
+SOURCES += ftcl.cpp ftcl_fft.cpp
 
 LIBS += -ltcl
 
