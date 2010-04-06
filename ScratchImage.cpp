@@ -47,6 +47,7 @@ void ScratchImage::delete_by_type_(void)
 	    break;
 	  case DT_UINT8:
 	    if (array_uint8_) delete[]array_uint8_;
+	    array_uint8_ = 0;
 	    break;
 	  default:
 	    assert(0);
@@ -60,6 +61,19 @@ void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
       delete_by_type_();
       axes_ = axes;
       type_ = type;
+      switch (type_) {
+	  case DT_VOID:
+	    break;
+	  case DT_DOUBLE:
+	    array_dbl_ = 0;
+	    break;
+	  case DT_UINT8:
+	    array_uint8_ = 0;
+	    break;
+	  default:
+	    assert(0);
+	    break;
+      }
 }
 
 std::vector<long> ScratchImage::get_axes(void) const
@@ -74,11 +88,28 @@ DataArray::type_t ScratchImage::get_type(void) const
 
 template <> inline double*ScratchImage::get_array_<double>(void)
 {
+	// Only if this really is a DOUBLE type.
+      if (type_ != DT_DOUBLE)
+	    return 0;
+
       if (array_dbl_ == 0) {
 	    array_dbl_ = new double [get_pixel_count(axes_)];
 	    assert(array_dbl_);
       }
       return array_dbl_;
+}
+
+template <> inline uint8_t*ScratchImage::get_array_<uint8_t>(void)
+{
+	// Only if this really is a DOUBLE type.
+      if (type_ != DT_UINT8)
+	    return 0;
+
+      if (array_uint8_ == 0) {
+	    array_uint8_ = new uint8_t [get_pixel_count(axes_)];
+	    assert(array_uint8_);
+      }
+      return array_uint8_;
 }
 
 template <class T> int ScratchImage::do_set_line_(size_t off, long wid, const T*src)
@@ -131,7 +162,62 @@ void ScratchImage::fill_in_info_table(QTableWidget*widget)
       }
 }
 
-QWidget* ScratchImage::create_view_dialog(QWidget*)
+QWidget* ScratchImage::create_view_dialog(QWidget*dialog_parent)
 {
+      if (const double*array = get_array_<double>())
+	    return create_view_double_(dialog_parent, array);
+
+      if (const uint8_t*array = get_array_<uint8_t>())
+	    return create_view_uint8_(dialog_parent, array);
+
       return 0;
+}
+
+QWidget* ScratchImage::create_view_double_(QWidget*dialog_parent, const double*array)
+{
+      if (axes_.size() != 2)
+	    return 0;
+
+      size_t pixel_count = get_pixel_count(axes_);
+      double val_min = array[0];
+      double val_max = array[0];
+      for (size_t idx = 1 ; idx < pixel_count ; idx += 1) {
+	    if (array[idx] > val_max) val_max = array[idx];
+	    if (array[idx] < val_min) val_min = array[idx];
+      }
+
+      double val_scale = 1.0;
+      if (val_max > val_min) val_scale = 255.5 * (val_max - val_min);
+
+      QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
+
+      for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
+	    double val = (array[idx] - val_min) * val_scale;
+	    if (val > 255) val = 255;
+	    if (val < 0)   val = 0;
+
+	    image.setPixel(idx % axes_[0], idx / axes_[0], qRgba(val, val, val, 0xff));
+      }
+
+      return new SimpleImageView(dialog_parent, image, getDisplayName());
+}
+
+QWidget* ScratchImage::create_view_uint8_(QWidget*dialog_parent, const uint8_t*array)
+{
+      if (axes_.size() != 2)
+	    return 0;
+
+      size_t pixel_count = get_pixel_count(axes_);
+
+      QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
+
+      for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
+	    int val = array[idx];
+	    if (val > 255) val = 255;
+	    if (val < 0)   val = 0;
+
+	    image.setPixel(idx % axes_[0], idx / axes_[0], qRgba(val, val, val, 0xff));
+      }
+
+      return new SimpleImageView(dialog_parent, image, getDisplayName());
 }

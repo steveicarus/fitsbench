@@ -203,12 +203,15 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
       QWidget*create_view_dialog(QWidget*parent);
 
     private:
+      QWidget*create_view_double_(QWidget*dialog_parent, const double*array);
+      QWidget*create_view_uint8_(QWidget*dialog_parent, const uint8_t*array);
+
+    private:
       std::vector<long> axes_;
       DataArray::type_t type_;
 
-      void delete_by_type_(void);
-
       template <class T> T*get_array_(void);
+      void delete_by_type_(void);
       union {
 	    uint8_t*array_uint8_;
 	    double*array_dbl_;
