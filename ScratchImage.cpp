@@ -187,7 +187,7 @@ QWidget* ScratchImage::create_view_double_(QWidget*dialog_parent, const double*a
       }
 
       double val_scale = 1.0;
-      if (val_max > val_min) val_scale = 255.5 * (val_max - val_min);
+      if (val_max > val_min) val_scale = 255.5 / (val_max - val_min);
 
       QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
 
