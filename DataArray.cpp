@@ -18,6 +18,7 @@
  */
 
 # include  "DataArray.h"
+# include  <cassert>
 
 using namespace std;
 
@@ -100,4 +101,15 @@ bool DataArray::incr(std::vector<long>&addr, const std::vector<long>&ref, size_t
 	    cur += 1;
       }
       return false;
+}
+
+std::vector<long> DataArray::add(const std::vector<long>&a, const std::vector<long>&b)
+{
+      vector<long>out = a;
+      assert(out.size() >= b.size());
+
+      for (size_t idx = 0 ; idx < b.size() ; idx += 1)
+	    out[idx] += b[idx];
+
+      return out;
 }

@@ -49,6 +49,14 @@ void ScratchImage::delete_by_type_(void)
 	    if (array_uint8_) delete[]array_uint8_;
 	    array_uint8_ = 0;
 	    break;
+	  case DT_UINT16:
+	    if (array_uint16_) delete[]array_uint16_;
+	    array_uint16_ = 0;
+	    break;
+	  case DT_UINT32:
+	    if (array_uint32_) delete[]array_uint32_;
+	    array_uint32_ = 0;
+	    break;
 	  default:
 	    assert(0);
 	    break;
@@ -69,6 +77,12 @@ void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
 	    break;
 	  case DT_UINT8:
 	    array_uint8_ = 0;
+	    break;
+	  case DT_UINT16:
+	    array_uint16_ = 0;
+	    break;
+	  case DT_UINT32:
+	    array_uint32_ = 0;
 	    break;
 	  default:
 	    assert(0);
@@ -112,6 +126,32 @@ template <> inline uint8_t*ScratchImage::get_array_<uint8_t>(void)
       return array_uint8_;
 }
 
+template <> inline uint16_t*ScratchImage::get_array_<uint16_t>(void)
+{
+	// Only if this really is a UINT16 type.
+      if (type_ != DT_UINT16)
+	    return 0;
+
+      if (array_uint16_ == 0) {
+	    array_uint16_ = new uint16_t [get_pixel_count(axes_)];
+	    assert(array_uint16_);
+      }
+      return array_uint16_;
+}
+
+template <> inline uint32_t*ScratchImage::get_array_<uint32_t>(void)
+{
+	// Only if this really is a UINT32 type.
+      if (type_ != DT_UINT32)
+	    return 0;
+
+      if (array_uint32_ == 0) {
+	    array_uint32_ = new uint32_t [get_pixel_count(axes_)];
+	    assert(array_uint32_);
+      }
+      return array_uint32_;
+}
+
 template <class T> int ScratchImage::do_set_line_(size_t off, long wid, const T*src)
 {
       T*dst = get_array_<T>() + off;
@@ -136,7 +176,13 @@ int ScratchImage::set_line_raw(const std::vector<long>&addr, long wid,
       switch (type) {
 	  case DT_DOUBLE:
 	    return do_set_line_(off, wid, reinterpret_cast<const double*>(data));
-	    break;
+	  case DT_UINT8:
+	    return do_set_line_(off, wid, reinterpret_cast<const uint8_t*>(data));
+	  case DT_UINT16:
+	    return do_set_line_(off, wid, reinterpret_cast<const uint16_t*>(data));
+	  case DT_UINT32:
+	    return do_set_line_(off, wid, reinterpret_cast<const uint32_t*>(data));
+
 	  default:
 	    assert(0);
 	    return -1;

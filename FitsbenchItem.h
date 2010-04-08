@@ -220,6 +220,8 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
       void delete_by_type_(void);
       union {
 	    uint8_t*array_uint8_;
+	    uint16_t*array_uint16_;
+	    uint32_t*array_uint32_;
 	    double*array_dbl_;
       };
 };

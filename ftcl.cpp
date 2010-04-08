@@ -31,6 +31,12 @@ FitsbenchItem* FitsbenchMain::item_from_name_(const string&name) const
       else return cur->second;
 }
 
+FitsbenchItem* FitsbenchMain::item_from_name_(Tcl_Obj*obj) const
+{
+      string idx_nam = Tcl_GetString(obj);
+      return item_from_name_(idx_nam);
+}
+
 vector<long> FitsbenchMain::vector_from_listobj_(Tcl_Obj*obj)
 {
       Tcl_Obj**axes_objv = 0;
@@ -108,8 +114,7 @@ int FitsbenchMain::ftcl_bench_(int objc, Tcl_Obj*const objv[])
       if (strcmp(subcmd, "display_text") == 0) {
 	    Tcl_ResetResult(tcl_engine_);
 	    for (int idx = 2 ; idx < objc ; idx += 1) {
-		  string idx_nam = Tcl_GetString(objv[idx]);
-		  FitsbenchItem* item = item_from_name_(idx_nam);
+		  FitsbenchItem* item = item_from_name_(objv[idx]);
 
 		  if (item) {
 			string text = item->getDisplayName().toStdString();

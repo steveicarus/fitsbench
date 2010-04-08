@@ -20,6 +20,11 @@ Get a list of the bench tree items that have script names.
 
 Get the display string for the named item.
 
+* crop <dst> <axes-list> <src> <start-point>
+
+Crop an array from the source. The destination can have fewer
+dimensions then the source array, but my fit entirely within the
+source array.
 
 * scratch new <name> <display-name> <type> <axes-list>
 

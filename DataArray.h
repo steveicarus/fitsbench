@@ -77,7 +77,7 @@ class DataArray {
 	// incremented, and so on. If the address overflows, it wraps
 	// to pixel 0 and this function returns false.
       static bool incr(std::vector<long>&addr, const std::vector<long>&ref, size_t axis);
-
+      static std::vector<long> add(const std::vector<long>&a, const std::vector<long>&b);
 };
 
 template <> inline int DataArray::set_line<int8_t>(const std::vector<long>&addr, long wid, const int8_t*data)

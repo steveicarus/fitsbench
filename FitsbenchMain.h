@@ -46,6 +46,7 @@ class FitsbenchMain : public QMainWindow {
 	// Convenience function for getting an item from the script
 	// name. If there is no item with the name, return 0.
       FitsbenchItem* item_from_name_(const std::string&nam) const;
+      FitsbenchItem* item_from_name_(Tcl_Obj*obj) const;
 
     private:
 	// The TCL engine...
@@ -57,6 +58,7 @@ class FitsbenchMain : public QMainWindow {
 	// Implementations of TCL commands...
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);
       int ftcl_axes_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_fft2d_(int objc, Tcl_Obj*const objv[]);
       int ftcl_phase_corr_(int objc, Tcl_Obj*const objv[]);
@@ -66,6 +68,8 @@ class FitsbenchMain : public QMainWindow {
       static int ftcl_bench_thunk_(ClientData obj, Tcl_Interp*interp,
 				   int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_axes_thunk_(ClientData obj, Tcl_Interp*interp,
+				  int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_crop_thunk_(ClientData obj, Tcl_Interp*interp,
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);

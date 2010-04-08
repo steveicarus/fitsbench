@@ -13,7 +13,8 @@ FORMS += simple.ui
 HEADERS += SimpleImageView.h
 SOURCES += SimpleImageView.cpp
 
-SOURCES += ftcl.cpp ftcl_fft.cpp
+# Script command implementations...
+SOURCES += ftcl.cpp ftcl_crop.cpp ftcl_fft.cpp
 
 LIBS += -ltcl
 
