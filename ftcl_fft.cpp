@@ -40,94 +40,40 @@ int FitsbenchMain::ftcl_phase_corr_thunk_(ClientData raw, Tcl_Interp*interp,
       return eng->ftcl_phase_corr_(objc, objv);
 }
 
-static std::vector<long> zero_addr(size_t axes)
+template<class src_t> static void do_get_complex_array(const std::vector<long>&axes, fftw_complex*dst, DataArray*src)
 {
-      vector<long> addr (axes);
-      for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
-	    addr[idx] = 0;
-      return addr;
-}
+      src_t*src_buf = new src_t[axes[0]];
 
-static bool incr_line(std::vector<long>&addr, const std::vector<long>&ref)
-{
-      size_t cur = 1;
-      while (cur < addr.size()) {
-	    addr[cur] += 1;
-	    if (addr[cur] < ref[cur])
-		  break;
-
-	    addr[cur] = 0;
-	    cur += 1;
-      }
-
-      return cur < addr.size();
-}
-
-template<class src_t> static void do_get_complex_array(const std::vector<long>&axes, fftw_complex*dst, DataArray*src, src_t*src_buf)
-{
-      long wid = axes[0];
-      vector<long> src_ptr (axes.size());
-
-      for (size_t idx = 0 ; idx < src_ptr.size() ; idx += 1)
-	    src_ptr[idx] = 0;
-
-      for (;;) {
-	    while (src_ptr[1] < axes[1]) {
-		  src->get_line(src_ptr, wid, src_buf);
-		  for (long idx = 0 ; idx < wid ; idx += 1) {
-			dst[0][0] = src_buf[idx];
-			dst[0][1] = 0.0;
-			dst += 1;
-		  }
-		  src_ptr[1] += 1;
-	    }
-	    src_ptr[1] = 0;
-	    size_t cur_axis = 2;
-	    while (cur_axis < src_ptr.size()) {
-		  src_ptr[cur_axis] += 1;
-		  if (src_ptr[cur_axis] < axes[cur_axis])
-			break;
-
-		  src_ptr[cur_axis] = 0;
-		  cur_axis += 1;
+      vector<long> src_ptr = DataArray::zero_addr(axes.size());
+      do {
+	    int rc = src->get_line(src_ptr, axes[0], src_buf);
+	    assert(rc >= 0);
+	    for (long idx = 0 ; idx < axes[0] ; idx += 1) {
+		  dst[0][0] = src_buf[idx];
+		  dst[0][1] = 0.0;
+		  dst += 1;
 	    }
 
-	      // If the line count overflowed all the axes, then we
-	      // are done. Break out of the loop.
-	    if (cur_axis == axes.size())
-		  break;
-      }
+      } while (DataArray::incr(src_ptr, axes, 1));
+
+      delete[]src_buf;
 }
 
 static void get_complex_array(const std::vector<long>& axes, fftw_complex*dst, DataArray*src)
 {
-      long wid = axes[0];
-
       switch (src->get_type()) {
-	  case DataArray::DT_UINT8: {
-		uint8_t*src_buf = new uint8_t[wid];
-		do_get_complex_array(axes, dst, src, src_buf);
-		delete[]src_buf;
-		break;
-	  }
-	  case DataArray::DT_INT8: {
-		int8_t*src_buf = new int8_t[wid];
-		do_get_complex_array(axes, dst, src, src_buf);
-		delete[]src_buf;
-		break;
-	  }
-	  case DataArray::DT_UINT16: {
-		uint16_t*src_buf = new uint16_t[wid];
-		do_get_complex_array(axes, dst, src, src_buf);
-		delete[]src_buf;
-		break;
-	  }
-	  case DataArray::DT_INT16: {
-		int16_t*src_buf = new int16_t[wid];
-		do_get_complex_array(axes, dst, src, src_buf);
-		delete[]src_buf;
-		break;
-	  }
+	  case DataArray::DT_UINT8:
+	    do_get_complex_array<uint8_t>(axes, dst, src);
+	    break;
+	  case DataArray::DT_INT8:
+	    do_get_complex_array<int8_t>(axes, dst, src);
+	    break;
+	  case DataArray::DT_UINT16:
+	    do_get_complex_array<uint16_t>(axes, dst, src);
+	    break;
+	  case DataArray::DT_INT16:
+	    do_get_complex_array<int16_t>(axes, dst, src);
+	    break;
 	  default: {
 		assert(0);
 		break;
@@ -222,30 +168,51 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
 
       const char*src2_name = Tcl_GetString(objv[3]);
-      if (src1_name == 0)
+      if (src2_name == 0)
 	    return TCL_ERROR;
 
       FitsbenchItem* dst_item = item_from_name_(dst_name);
 
       FitsbenchItem* src1_item = item_from_name_(src1_name);
-      assert(src1_item);
+      if (src1_item == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Image ", src1_name, " not found.", 0);
+	    return TCL_ERROR;
+      }
 
       FitsbenchItem* src2_item = item_from_name_(src2_name);
-      assert(src2_item);
+      if (src1_item == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Image ", src2_name, " not found.", 0);
+	    return TCL_ERROR;
+      }
 
       DataArray*dst = dynamic_cast<DataArray*>(dst_item);
 
       DataArray*src1 = dynamic_cast<DataArray*>(src1_item);
-      assert(src1);
+      if (src1 == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Item ", src1_name, " is not a data array.", 0);
+	    return TCL_ERROR;
+      }
 
       DataArray*src2 = dynamic_cast<DataArray*>(src2_item);
-      assert(src2);
+      if (src2 == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Item ", src2_name, " is not a data array.", 0);
+	    return TCL_ERROR;
+      }
+
+      assert(src1 != src2); // XXXX
 
       vector<long> src1_axes = src1->get_axes();
       vector<long> src2_axes = src2->get_axes();
 
-	// Make sure the dimensions of the source images match.
-      assert(src1_axes == src2_axes);
+      if (src1_axes != src2_axes) {
+	    Tcl_AppendResult(tcl_engine_, "Axes of sources images must match.", 0);
+	    return TCL_ERROR;
+      }
+
+      if (dst && dst->get_axes() != src1_axes) {
+	    Tcl_AppendResult(tcl_engine_, "Axes of destination image must match source images.", 0);
+	    return TCL_ERROR;
+      }
 
 	// If the destination image exists, make sure it is a DataArray.
       assert(dst || !dst_item);
@@ -262,64 +229,85 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    dst = item;
       }
 
+      assert(src1_axes == src2_axes);
       assert(src1_axes == dst->get_axes());
 
       size_t pixel_count = DataArray::get_pixel_count(src1_axes);
 
       fftw_complex*src1_array = (fftw_complex*)fftw_malloc(pixel_count * sizeof(fftw_complex));
       fftw_complex*src2_array = (fftw_complex*)fftw_malloc(pixel_count * sizeof(fftw_complex));
-
-      get_complex_array(src1_axes, src1_array, src1);
-      get_complex_array(src1_axes, src2_array, src2);
+      fftw_complex*dst_array  = (fftw_complex*)fftw_malloc(pixel_count * sizeof(fftw_complex));
 
       assert(src1_array);
       assert(src2_array);
+      assert(dst_array);
 
       fftw_plan plan1 = fftw_plan_dft_1d(pixel_count, src1_array, src1_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);
       fftw_plan plan2 = fftw_plan_dft_1d(pixel_count, src2_array, src2_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);
+      fftw_plan pland = fftw_plan_dft_1d(pixel_count, dst_array, dst_array,
+					 FFTW_BACKWARD, FFTW_ESTIMATE);
+
+      get_complex_array(src1_axes, src1_array, src1);
+      get_complex_array(src2_axes, src2_array, src2);
 
       fftw_execute(plan1);
       fftw_execute(plan2);
 
-      fftw_destroy_plan(plan1);
-      fftw_destroy_plan(plan2);
-
       for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
 	    fftw_complex*cur1 = src1_array + idx;
 	    fftw_complex*cur2 = src2_array + idx;
+	    fftw_complex*curd = dst_array  + idx;
+
+	    cur2[0][1] = -cur1[0][1];
 
 	    fftw_complex res;
-	    res[0] = (cur1[0][0] * cur2[0][0]) - (cur1[0][1] * (-cur2[0][1]));
-	    res[1] = (cur1[0][0] * (-cur2[0][1])) + (cur1[0][1] * cur2[0][0]);
+	    res[0] = (cur1[0][0] * cur2[0][0]) - (cur1[0][1] * cur2[0][1]);
+	    res[1] = (cur1[0][0] * cur2[0][1]) + (cur1[0][1] * cur2[0][0]);
 
 	    double mag = sqrt( pow(res[0],2.0) + pow(res[1],2.0) );
-	    cur1[0][0] = res[0] / mag;
-	    cur1[0][1] = res[1] / mag;
+	    curd[0][0] = res[0] / mag;
+	    curd[0][1] = res[1] / mag;
       }
 
-      fftw_plan planr = fftw_plan_dft_1d(pixel_count, src1_array, src1_array,
-					 FFTW_BACKWARD, FFTW_ESTIMATE);
-      fftw_execute(planr);
-      fftw_destroy_plan(planr);
+
+      fftw_execute(pland);
 
       double*res_buf = new double[src1_axes[0]];
 
-      vector<long> addr = zero_addr(src1_axes.size());
-      fftw_complex*ptr = src1_array;
+	// Convert the result image from complex to double by dropping
+	// the now degenerate imaginary part. While we are at it, look
+	// for the maximum value. This will be our correlation result.
+      vector<long> addr = DataArray::zero_addr(src1_axes.size());
+      fftw_complex*ptr = dst_array;
+      vector<long> max_ptr = addr;
+      double max_val = dst_array[0][0];
       do {
-	    for (long idx = 0 ; idx < src1_axes[0] ; idx += 1)
-		  res_buf[idx] = ptr[idx][0] / (double) pixel_count;
-
+	    for (long idx = 0 ; idx < src1_axes[0] ; idx += 1) {
+		  res_buf[idx] = ptr[idx][0];
+		  if (res_buf[idx] > max_val) {
+			max_val = res_buf[idx];
+			max_ptr = addr;
+			max_ptr[0] = idx;
+		  }
+	    }
 	    dst->set_line(addr, src1_axes[0], res_buf);
 	    ptr += src1_axes[0];
-      } while (incr_line(addr, src1_axes));
+      } while (DataArray::incr(addr, src1_axes, 1));
 
       delete[]res_buf;
 
+      fftw_destroy_plan(plan1);
+      fftw_destroy_plan(plan2);
+      fftw_destroy_plan(pland);
+
       fftw_free(src1_array);
       fftw_free(src2_array);
+      fftw_free(dst_array);
+
+      Tcl_Obj*addr_obj = listobj_from_vector_(max_ptr);
+      Tcl_SetObjResult(tcl_engine_, addr_obj);
 
       return TCL_OK;
 }

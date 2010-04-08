@@ -47,6 +47,18 @@ vector<long> FitsbenchMain::vector_from_listobj_(Tcl_Obj*obj)
       return axes;
 }
 
+Tcl_Obj* FitsbenchMain::listobj_from_vector_(const vector<long>&axes)
+{
+      Tcl_Obj*obj = Tcl_NewListObj(0, 0);
+
+      for (size_t idx = 0 ; idx < axes.size() ; idx += 1) {
+	    Tcl_Obj*cur = Tcl_NewLongObj(axes[idx]);
+	    Tcl_ListObjAppendElement(tcl_engine_, obj, cur);
+      }
+
+      return obj;
+}
+
 int FitsbenchMain::ftcl_bench_thunk_(ClientData raw, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[])
 {

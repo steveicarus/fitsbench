@@ -52,6 +52,7 @@ class FitsbenchMain : public QMainWindow {
       Tcl_Interp*tcl_engine_;
 
       std::vector<long> vector_from_listobj_(Tcl_Obj*obj);
+      Tcl_Obj* listobj_from_vector_(const std::vector<long>&axes);
 
 	// Implementations of TCL commands...
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);

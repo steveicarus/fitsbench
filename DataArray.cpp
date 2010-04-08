@@ -19,6 +19,8 @@
 
 # include  "DataArray.h"
 
+using namespace std;
+
 DataArray::~DataArray()
 {
 }
@@ -76,4 +78,26 @@ size_t DataArray::get_pixel_count(const std::vector<long>&axes)
 	    count *= axes[idx];
 
       return count;
+}
+
+std::vector<long> DataArray::zero_addr(size_t axes)
+{
+      vector<long> addr (axes);
+      for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
+	    addr[idx] = 0;
+      return addr;
+}
+
+bool DataArray::incr(std::vector<long>&addr, const std::vector<long>&ref, size_t axis)
+{
+      size_t cur = axis;
+      while (cur < addr.size()) {
+	    addr[cur] += 1;
+	    if (addr[cur] < ref[cur])
+		  return true;
+
+	    addr[cur] = 0;
+	    cur += 1;
+      }
+      return false;
 }
