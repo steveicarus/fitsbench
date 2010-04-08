@@ -199,8 +199,6 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
       }
 
-      assert(src1 != src2); // XXXX
-
       vector<long> src1_axes = src1->get_axes();
       vector<long> src2_axes = src2->get_axes();
 

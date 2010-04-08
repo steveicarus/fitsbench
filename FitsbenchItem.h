@@ -82,6 +82,9 @@ class FitsFile : public BenchFile {
 	    virtual std::vector<long> get_axes(void) const;
 	    type_t get_type(void) const;
 
+	    int get_line_raw(const std::vector<long>&addr, long wid,
+			     type_t type, void*data);
+
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
 	    QWidget*create_view_dialog(QWidget*parent);
@@ -101,6 +104,9 @@ class FitsFile : public BenchFile {
 	// rendering. Use FITS conventions for plane numberings,
 	// i.e. the first plane is 1, the second 2, etc.
       void render_chdu(QImage&image, int red, int green, int blu, int&status);
+
+      int get_line_chdu(const std::vector<long>&addr, long wid,
+			DataArray::type_t type, void*data, int&status);
 
     public:
 	// CFITSIO-like methods (See the cfitsio documentation)

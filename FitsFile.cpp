@@ -156,6 +156,27 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
       delete[]fpixel;
 }
 
+int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
+			    DataArray::type_t type, void*data, int&status)
+{
+      int rc = 0;
+      long*fpixel = new long [addr.size()];
+      for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
+	    fpixel[idx] = addr[idx];
+
+      if (type==DataArray::DT_UINT8) {
+	    int anynul = 0;
+	    fits_read_pix(fd_, TBYTE, fpixel, wid, 0, data, &anynul, &status);
+
+      } else {
+	    rc = -1;
+      }
+
+      delete[]fpixel;
+      return rc;
+}
+
+
 FitsFile::HDU::HDU(FitsFile*parent, int num)
 : FitsbenchItem(parent), hdu_num_(num)
 {
@@ -222,6 +243,22 @@ DataArray::type_t FitsFile::HDU::get_type(void) const
 	  case DOUBLE_IMG: return DT_FLOAT64;
 	  default: return DT_VOID;
       }
+}
+
+int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
+				type_t type, void*data)
+{
+      FitsFile*fits = dynamic_cast<FitsFile*> (parent());
+      assert(fits);
+
+      if (get_type() != type)
+	    return -1;
+
+      int status = 0;
+      int hdu_type = 0;
+      fits->movabs_hdu(hdu_num_, hdu_type, status);
+
+      return fits->get_line_chdu(addr, wid, type, data, status);
 }
 
 void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)
