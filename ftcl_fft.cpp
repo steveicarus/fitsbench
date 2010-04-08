@@ -258,7 +258,9 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    fftw_complex*cur2 = src2_array + idx;
 	    fftw_complex*curd = dst_array  + idx;
 
-	    cur2[0][1] = -cur1[0][1];
+	      // Taking the complex conjugate here defines the
+	      // corresponding image as the reference image.
+	    cur1[0][1] = -cur1[0][1];
 
 	    fftw_complex res;
 	    res[0] = (cur1[0][0] * cur2[0][0]) - (cur1[0][1] * cur2[0][1]);
