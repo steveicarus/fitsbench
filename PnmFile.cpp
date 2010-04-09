@@ -276,6 +276,27 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
       return -1;
 }
 
+int PnmFile::HDU::get_line8(const std::vector<long>&addr, long wid, uint8_t*data)
+{
+      type_t pixtype = get_type();
+
+      if (pixtype == DT_UINT8)
+	    return get_line(addr, wid, data);
+
+      if (pixtype == DT_UINT16) {
+	    uint16_t*data16 = new uint16_t[wid];
+	    int rc = get_line(addr, wid, data16);
+	    if (rc < 0) return rc;
+
+	    for (int idx = 0 ; idx < wid ; idx += 1)
+		  data[idx] = data16[idx] >> 8;
+
+	    return rc;
+      }
+
+      return -1;
+}
+
 static void append_row(QTableWidget*widget, const QString&col1, const QString&col2, const QString&col3)
 {
       int row = widget->rowCount();
@@ -349,14 +370,14 @@ QWidget* PnmFile::HDU::create_view_dialog(QWidget*dialog_parent)
       if (addr.size() > 2) addr[2] = 0;
 
       for (addr[1] = 0 ; addr[1] < axes[1] ; addr[1] += 1) {
-	    int rc = get_line(addr, wid, rowr);
+	    int rc = get_line8(addr, wid, rowr);
 	    qassert(rc >= 0);
 	    if (rowg != rowr) {
 		  addr[2] = 1;
-		  rc = get_line(addr, wid, rowg);
+		  rc = get_line8(addr, wid, rowg);
 		  qassert(rc >= 0);
 		  addr[2] = 2;
-		  rc = get_line(addr, wid, rowb);
+		  rc = get_line8(addr, wid, rowb);
 		  qassert(rc >= 0);
 		  addr[2] = 0;
 	    }

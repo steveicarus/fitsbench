@@ -145,6 +145,8 @@ class PnmFile : public BenchFile {
 	    int get_line_raw(const std::vector<long>&addr, long wid,
 			     type_t pixtype, void*data);
 
+	    int get_line8(const std::vector<long>&addr, long wid, uint8_t*data);
+
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
 	    QWidget*create_view_dialog(QWidget*parent);
