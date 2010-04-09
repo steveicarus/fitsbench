@@ -276,6 +276,14 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
       return -1;
 }
 
+static void append_row(QTableWidget*widget, const QString&col1, const QString&col2, const QString&col3)
+{
+      int row = widget->rowCount();
+      widget->insertRow(row);
+      widget->setItem(row, 0, new QTableWidgetItem(col1));
+      widget->setItem(row, 1, new QTableWidgetItem(col2));
+      widget->setItem(row, 2, new QTableWidgetItem(col3));
+}
 
 /*
  * Describe a PNM file like this:
@@ -293,11 +301,6 @@ void PnmFile::HDU::fill_in_info_table(QTableWidget*widget)
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
       assert(pnm);
 
-      int nkeys = 6;
-      if (pnm->planes() > 1) nkeys += 1;
-
-      widget->setRowCount(nkeys);
-
       long datamax = pnm->datamax();
 
       QString bitpix_txt = datamax >= 256? "16" : "8";
@@ -306,34 +309,20 @@ void PnmFile::HDU::fill_in_info_table(QTableWidget*widget)
       QString height_txt = QString("%1").arg(pnm->height());
       QString planes_txt = QString("%1").arg(pnm->planes());
 
-      widget->setItem(0, 0, new QTableWidgetItem("BITPIX"));
-      widget->setItem(0, 1, new QTableWidgetItem(bitpix_txt));
-      widget->setItem(0, 2, new QTableWidgetItem(""));
+      widget->clear();
 
-      widget->setItem(1, 0, new QTableWidgetItem("DATAMIN"));
-      widget->setItem(1, 1, new QTableWidgetItem("0"));
-      widget->setItem(1, 2, new QTableWidgetItem(""));
-
-      widget->setItem(2, 0, new QTableWidgetItem("DATAMAX"));
-      widget->setItem(2, 1, new QTableWidgetItem(datamax_txt));
-      widget->setItem(2, 2, new QTableWidgetItem(""));
-
-      widget->setItem(3, 0, new QTableWidgetItem("NAXIS"));
-      widget->setItem(3, 1, new QTableWidgetItem(pnm->planes()>1? "3" : "2"));
-      widget->setItem(3, 2, new QTableWidgetItem(""));
-
-      widget->setItem(4, 0, new QTableWidgetItem("NAXIS1"));
-      widget->setItem(4, 1, new QTableWidgetItem(width_txt));
-      widget->setItem(4, 2, new QTableWidgetItem(""));
-
-      widget->setItem(5, 0, new QTableWidgetItem("NAXIS2"));
-      widget->setItem(5, 1, new QTableWidgetItem(height_txt));
-      widget->setItem(5, 2, new QTableWidgetItem(""));
-
+      append_row(widget, "BITPIX",  bitpix_txt,  "");
+      if (datamax >= 256) {
+	    append_row(widget, "BZERO", "32768", "");
+	    append_row(widget, "BSCALE","1",     "");
+      }
+      append_row(widget, "DATAMIN", "0",         "");
+      append_row(widget, "DATAMAX", datamax_txt, "");
+      append_row(widget, "NAXIS",   pnm->planes()>1? "3" : "2", "");
+      append_row(widget, "NAXIS1",  width_txt,   "");
+      append_row(widget, "NAXIS2",  height_txt,  "");
       if (pnm->planes() > 1) {
-	    widget->setItem(6, 0, new QTableWidgetItem("NAXIS3"));
-	    widget->setItem(6, 1, new QTableWidgetItem(planes_txt));
-	    widget->setItem(6, 2, new QTableWidgetItem("RED, GREEN, BLUE"));
+	    append_row(widget, "NAXIS3", planes_txt, "RED, GREEN, BLUE");
       }
 }
 

@@ -23,6 +23,7 @@
 # include  <complex>
 # include  <vector>
 # include  <string>
+# include  <fitsio.h>
 
 /*
  * The DataArray is an abstract class that represents objects that can
@@ -31,16 +32,25 @@
 class DataArray {
 
     public:
+	// These are image pixel types that the DataArray
+	// supports. Most have matching cfitsio definitions and a way
+	// to represent them in a FITS IMAGE HDU. There are a few that
+	// don't match anything, they are only used internally.
       enum type_t {
-	    DT_VOID = 0,
-	    DT_INT8 = 8,    DT_UINT8 = 9,
-	    DT_INT16 = 16,  DT_UINT16 = 17,
-	    DT_INT32 = 32,  DT_UINT32 = 33,
-	    DT_INT64 = 64,  DT_UINT64 = 65,
-	    DT_FLOAT32 = -32,
-	    DT_FLOAT64 = -64,
-	    DT_DOUBLE  = -65,  /* Native double */
-	    DT_COMPLEX = -66   /* Native double complex */
+	      //         CFITSIO          Equivilent FITS declaration
+	    DT_VOID    = 0,
+	    DT_INT8    = SBYTE_IMG,   //  BITPIX=  8, BZERO = -128
+	    DT_UINT8   = BYTE_IMG,    //  BITPIX=  8, BZERO = 0
+	    DT_INT16   = SHORT_IMG,   //  BITPIX= 16, BZERO = 0
+	    DT_UINT16  = USHORT_IMG,  //  BITPIX= 16, BZERO = 32768
+	    DT_INT32   = LONG_IMG,    //  BITPIX= 32, BZERO = 0
+	    DT_UINT32  = ULONG_IMG,   //  BITPIX= 32, BZERO = 2147483648
+	    DT_INT64   = LONGLONG_IMG,//  BITPIX= 64, BZERO = 0
+	    DT_UINT64  = 65,          //  BITPIX= 64, BZERO = <very large>
+	    DT_FLOAT32 = FLOAT_IMG,   //  BITPIX=-32
+	    DT_FLOAT64 = DOUBLE_IMG,  //  BITPIX=-64
+	    DT_DOUBLE  = -65,         //  (Native double)
+	    DT_COMPLEX = -66          //  (Native double complex)
       };
 
       static type_t type_from_string(const std::string&str);
