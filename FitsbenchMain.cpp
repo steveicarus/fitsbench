@@ -26,6 +26,7 @@
 # include  <QMenu>
 # include  <QTreeWidget>
 # include  <iostream>
+# include  <cassert>
 
 using namespace std;
 
@@ -90,7 +91,22 @@ void FitsbenchMain::set_bench_script_name_(FitsbenchItem*item, const QString&nam
 
       if (! name.isNull() && ! name.isEmpty()) {
 	    std::string name_str = name.toStdString();
+
+	    if (FitsbenchItem*old_item = script_names_[name_str])
+		  old_item->setScriptName("");
+
 	    script_names_[name_str] = item;
+      }
+}
+
+void FitsbenchMain::clear_bench_script_names_(FitsbenchItem*item)
+{
+      set_bench_script_name_(item, QString());
+
+      for (int idx = 0 ; idx < item->childCount() ; idx += 1) {
+	    QTreeWidgetItem*cur_raw = item->child(idx);
+	    if (FitsbenchItem*cur = dynamic_cast<FitsbenchItem*> (cur_raw))
+		  clear_bench_script_names_(cur);
       }
 }
 
@@ -151,11 +167,18 @@ void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
       FitsbenchItem*item = dynamic_cast<FitsbenchItem*> (raw_item);
       if (item == 0) return;
 
+
       QAction prev ("Preview", 0);
       QAction view ("Quick View", 0);
       QAction name ("Script Name", 0);
       QAction clos ("Close", 0);
-      clos.setEnabled(false); // Not implemented yet
+
+      int item_index = ui.bench_tree->indexOfTopLevelItem(raw_item);
+	// Close only works for top level items.
+      if (item_index >= 0)
+	    clos.setEnabled(true);
+      else
+	    clos.setEnabled(false);
 
       QList<QAction*> menu_list;
       menu_list .append(&prev);
@@ -177,7 +200,13 @@ void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
 	    if (! text.isNull()) set_bench_script_name_(item, text);
 
       } else if (hit == &clos) {
-	    cerr << "XXXX Close" << endl;
+	    assert(item_index >= 0);
+	      // Remove any related script names
+	    clear_bench_script_names_(item);
+	      // Remove the item from the tree
+	    QTreeWidgetItem*tmp = ui.bench_tree->takeTopLevelItem(item_index);
+	    assert(tmp == raw_item);
+	    delete raw_item;
       }
 }
 

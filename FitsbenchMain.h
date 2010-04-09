@@ -43,6 +43,9 @@ class FitsbenchMain : public QMainWindow {
       std::map<std::string, FitsbenchItem*> script_names_;
       void set_bench_script_name_(FitsbenchItem*item, const QString&name);
 
+	// Clear the script names for this item and all its children.
+      void clear_bench_script_names_(FitsbenchItem*item);
+
 	// Convenience function for getting an item from the script
 	// name. If there is no item with the name, return 0.
       FitsbenchItem* item_from_name_(const std::string&nam) const;

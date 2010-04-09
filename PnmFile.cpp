@@ -107,6 +107,9 @@ PnmFile::PnmFile(const QString&name, const QFileInfo&path)
       cache_y_ = -1;
       cache_ = new uint8_t[wid_ * pla_ * bpv()];
 
+	// Note that making the HDU a child of this QTreeWidgetItem
+	// automatically takes care of its lifetime. QT will delete it
+	// for me when this item is delete.
       hdu_ = new HDU(this);
 }
 
