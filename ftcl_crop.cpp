@@ -19,7 +19,7 @@
 
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
-# include  <assert.h>
+# include  "qassert.h"
 
 using namespace std;
 
@@ -27,7 +27,7 @@ int FitsbenchMain::ftcl_crop_thunk_(ClientData raw, Tcl_Interp*interp,
 				    int objc, Tcl_Obj*CONST objv[])
 {
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
-      assert(eng->tcl_engine_ == interp);
+      qassert(eng->tcl_engine_ == interp);
       return eng->ftcl_crop_(objc, objv);
 }
 
@@ -99,14 +99,15 @@ int FitsbenchMain::ftcl_crop_(int objc, Tcl_Obj*const objv[])
 	    data = new unsigned char[dst_axes[0]];
 	    break;
 	  default:
-	    assert(0);
+	    qassert(0);
       }
 
       vector<long>dst_addr = DataArray::zero_addr(dst_axes.size());
 
       do {
 	    vector<long> src_addr = DataArray::add(src_point, dst_addr);
-	    src->get_line_raw(src_addr, dst_axes[0], dst_type, data);
+	    int rc = src->get_line_raw(src_addr, dst_axes[0], dst_type, data);
+	    qassert(rc >= 0);
 	    dst->set_line_raw(dst_addr, dst_axes[0], dst_type, data);
       } while (DataArray::incr(dst_addr, dst_axes, 1));
 

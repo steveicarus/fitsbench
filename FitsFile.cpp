@@ -22,7 +22,7 @@
 # include  <QStackedWidget>
 # include  <QTableWidget>
 # include  <iostream>
-# include  <assert.h>
+# include  "qassert.h"
 
 using namespace std;
 
@@ -116,14 +116,14 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
       int naxis = 0;
       get_img_dim(naxis, status);
 
-      assert(naxis >= 2);
+      qassert(naxis >= 2);
 
       vector<long>naxes (naxis);
       get_img_size(naxes, status);
 
-      assert(ridx == 1 || naxis >= 3 && ridx <= naxes[2]);
-      assert(gidx == 1 || naxis >= 3 && gidx <= naxes[2]);
-      assert(bidx == 1 || naxis >= 3 && bidx <= naxes[2]);
+      qassert(ridx == 1 || naxis >= 3 && ridx <= naxes[2]);
+      qassert(gidx == 1 || naxis >= 3 && gidx <= naxes[2]);
+      qassert(bidx == 1 || naxis >= 3 && bidx <= naxes[2]);
 
       image = QImage(naxes[0], naxes[1], QImage::Format_ARGB32);
 
@@ -210,7 +210,7 @@ FitsFile::HDU::~HDU()
 vector<long> FitsFile::HDU::get_axes(void) const
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-      assert(fits);
+      qassert(fits);
 
       int status = 0;
       int naxis = 0;
@@ -225,7 +225,7 @@ vector<long> FitsFile::HDU::get_axes(void) const
 DataArray::type_t FitsFile::HDU::get_type(void) const
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-      assert(fits);
+      qassert(fits);
 
       int status = 0;
       int bitpix = 0;
@@ -249,7 +249,7 @@ int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
 				type_t type, void*data)
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-      assert(fits);
+      qassert(fits);
 
       if (get_type() != type)
 	    return -1;
@@ -264,7 +264,7 @@ int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
 void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-      assert(fits);
+      qassert(fits);
 
       int status = 0;
       int hdu_type = 0;
@@ -288,7 +288,7 @@ void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)
 QWidget* FitsFile::HDU::create_view_dialog(QWidget*dialog_parent)
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
-      assert(fits);
+      qassert(fits);
 
       QImage image;
       int status = 0;

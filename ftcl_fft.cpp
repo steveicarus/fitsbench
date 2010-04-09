@@ -20,7 +20,7 @@
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
 # include  <fftw3.h>
-# include  <assert.h>
+# include  "qassert.h"
 
 using namespace std;
 
@@ -28,7 +28,7 @@ int FitsbenchMain::ftcl_fft2d_thunk_(ClientData raw, Tcl_Interp*interp,
 				       int objc, Tcl_Obj*CONST objv[])
 {
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
-      assert(eng->tcl_engine_ == interp);
+      qassert(eng->tcl_engine_ == interp);
       return eng->ftcl_fft2d_(objc, objv);
 }
 
@@ -36,7 +36,7 @@ int FitsbenchMain::ftcl_phase_corr_thunk_(ClientData raw, Tcl_Interp*interp,
 				       int objc, Tcl_Obj*CONST objv[])
 {
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
-      assert(eng->tcl_engine_ == interp);
+      qassert(eng->tcl_engine_ == interp);
       return eng->ftcl_phase_corr_(objc, objv);
 }
 
@@ -47,7 +47,7 @@ template<class src_t> static void do_get_complex_array(const std::vector<long>&a
       vector<long> src_ptr = DataArray::zero_addr(axes.size());
       do {
 	    int rc = src->get_line(src_ptr, axes[0], src_buf);
-	    assert(rc >= 0);
+	    qassert(rc >= 0);
 	    for (long idx = 0 ; idx < axes[0] ; idx += 1) {
 		  dst[0][0] = src_buf[idx];
 		  dst[0][1] = 0.0;
@@ -75,7 +75,7 @@ static void get_complex_array(const std::vector<long>& axes, fftw_complex*dst, D
 	    do_get_complex_array<int16_t>(axes, dst, src);
 	    break;
 	  default: {
-		assert(0);
+		qassert(0);
 		break;
 	  }
       }
@@ -83,7 +83,7 @@ static void get_complex_array(const std::vector<long>& axes, fftw_complex*dst, D
 
 int FitsbenchMain::ftcl_fft2d_(int objc, Tcl_Obj*const objv[])
 {
-      assert(objc == 4);
+      qassert(objc == 4);
 
       const char*dst_name = Tcl_GetString(objv[1]);
       if (dst_name == 0)
@@ -94,16 +94,16 @@ int FitsbenchMain::ftcl_fft2d_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
 
       FitsbenchItem* dst_item = item_from_name_(dst_name);
-      assert(dst_item);
+      qassert(dst_item);
 
       FitsbenchItem* src_item = item_from_name_(src_name);
-      assert(src_item);
+      qassert(src_item);
 
       DataArray*dst = dynamic_cast<DataArray*>(dst_item);
-      assert(dst);
+      qassert(dst);
 
       DataArray*src = dynamic_cast<DataArray*>(src_item);
-      assert(src);
+      qassert(src);
 
       vector<long> addr = vector_from_listobj_(objv[3]);
 
@@ -112,13 +112,13 @@ int FitsbenchMain::ftcl_fft2d_(int objc, Tcl_Obj*const objv[])
 
 	// Make sure the source array has enough axes, and matches the
 	// dimensionality of the address.
-      assert(src_axes.size() >= 2);
-      assert(src_axes.size() == addr.size());
+      qassert(src_axes.size() >= 2);
+      qassert(src_axes.size() == addr.size());
 
 	// Make sure the source array has enough width/height to
 	// supply data for the result.
-      assert(addr[0] + src_axes[0] <= dst_axes[0]);
-      assert(addr[1] + src_axes[1] <= dst_axes[1]);
+      qassert(addr[0] + src_axes[0] <= dst_axes[0]);
+      qassert(addr[1] + src_axes[1] <= dst_axes[1]);
 
 	// Everything checks out, so start the actual processing.
       fftw_complex*array = (fftw_complex*)fftw_malloc(dst_axes[0]*dst_axes[1]*sizeof(fftw_complex));
@@ -130,7 +130,8 @@ int FitsbenchMain::ftcl_fft2d_(int objc, Tcl_Obj*const objv[])
       uint8_t*src_buf = new uint8_t[dst_axes[0]];
       vector<long> src_ptr = addr;
       for (int ydx = 0 ; ydx < dst_axes[1] ; ydx += 1, src_ptr[1] += 1) {
-	    src->get_line(src_ptr, dst_axes[1], src_buf);
+	    int rc = src->get_line(src_ptr, dst_axes[1], src_buf);
+	    qassert(rc >= 0);
 	    fftw_complex*dst_buf = array + ydx*dst_axes[0];
 	    for (int xdx = 0 ; xdx < dst_axes[0] ; xdx += 1) {
 		  dst_buf[0][0] = src_buf[xdx];
@@ -213,7 +214,7 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       }
 
 	// If the destination image exists, make sure it is a DataArray.
-      assert(dst || !dst_item);
+      qassert(dst || !dst_item);
 
       if (! dst) {
 	    QString dst_disp = QString("phase_correlate(%1, %2)") .arg(src1_name) .arg(src2_name);
@@ -227,8 +228,8 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    dst = item;
       }
 
-      assert(src1_axes == src2_axes);
-      assert(src1_axes == dst->get_axes());
+      qassert(src1_axes == src2_axes);
+      qassert(src1_axes == dst->get_axes());
 
       size_t pixel_count = DataArray::get_pixel_count(src1_axes);
 
@@ -236,9 +237,9 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       fftw_complex*src2_array = (fftw_complex*)fftw_malloc(pixel_count * sizeof(fftw_complex));
       fftw_complex*dst_array  = (fftw_complex*)fftw_malloc(pixel_count * sizeof(fftw_complex));
 
-      assert(src1_array);
-      assert(src2_array);
-      assert(dst_array);
+      qassert(src1_array);
+      qassert(src2_array);
+      qassert(dst_array);
 
       fftw_plan plan1 = fftw_plan_dft_1d(pixel_count, src1_array, src1_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);

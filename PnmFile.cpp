@@ -22,7 +22,7 @@
 # include  <QStackedWidget>
 # include  <QTableWidget>
 # include  <iostream>
-# include  <assert.h>
+# include  "qassert.h"
 
 #if defined(Q_WS_MAC)
 static inline uint16_t bswap_16(uint16_t val)
@@ -64,9 +64,9 @@ PnmFile::PnmFile(const QString&name, const QFileInfo&path)
 
       char chr;
       chr = fgetc(fd_);
-      assert(chr == 'P');
+      qassert(chr == 'P');
       chr = fgetc(fd_);
-      assert(chr == '5' || chr == '6');
+      qassert(chr == '5' || chr == '6');
       if (chr == '5')
 	    pla_ = 1;
       else
@@ -132,7 +132,7 @@ PnmFile::HDU::~HDU()
 vector<long> PnmFile::HDU::get_axes(void) const
 {
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
-      assert(pnm);
+      qassert(pnm);
 
       vector<long> res (pnm->planes()==1? 2 : 3);
 
@@ -146,7 +146,7 @@ vector<long> PnmFile::HDU::get_axes(void) const
 DataArray::type_t PnmFile::HDU::get_type(void) const
 {
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
-      assert(pnm);
+      qassert(pnm);
 
       if (pnm->datamax() >= 256)
 	    return DT_UINT16;
@@ -158,7 +158,7 @@ int PnmFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
 			       type_t pixtype, void*data)
 {
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
-      assert(pnm);
+      qassert(pnm);
       return pnm->get_line_raw(addr, wid, pixtype, data);
 }
 
@@ -192,7 +192,7 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 	    if (rc < 0) return rc;
 
 	    size_t cnt = fread(cache_, bpv(), wid_*pla_, fd_);
-	    assert(cnt == (size_t)(wid*pla_));
+	    qassert(cnt == (size_t)(wid*pla_));
 
 	    cache_y_ = addr[1];
       }
@@ -201,7 +201,7 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 
 	      // Easiest case, the PNM file is 8bit gray. Read the
 	      // data directly into the destination buffer.
-	    assert(pixtype == DataArray::DT_UINT8);
+	    qassert(pixtype == DataArray::DT_UINT8);
 
 	    uint8_t*src = cache_ + addr[0];
 	    memcpy(data, src, wid);
@@ -212,8 +212,8 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 	      // Color PNM files are stored with the planes
 	      // interleaved at the pixel level. Extract the plane
 	      // that we want.
-	    assert(pixtype == DataArray::DT_UINT8);
-	    assert(addr.size() == 3 && addr[2] < 3);
+	    qassert(pixtype == DataArray::DT_UINT8);
+	    qassert(addr.size() == 3 && addr[2] < 3);
 
 	    uint8_t*dst = reinterpret_cast<uint8_t*> (data);
 	    uint8_t*src = cache_ + addr[0] * pla_ + addr[2];
@@ -227,7 +227,7 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 
       } else if (bpv() == 2 && pla_ == 1) {
 
-	    assert(pixtype == DataArray::DT_UINT16);
+	    qassert(pixtype == DataArray::DT_UINT16);
 
 	    uint16_t*dst = reinterpret_cast<uint16_t*> (data);
 	    uint16_t*src = reinterpret_cast<uint16_t*> (cache_) + addr[0];
@@ -248,8 +248,8 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 
       } else if (bpv() == 2 && pla_ == 3) {
 
-	    assert(pixtype == DataArray::DT_UINT16);
-	    assert(addr.size() == 3 && addr[2] < 3);
+	    qassert(pixtype == DataArray::DT_UINT16);
+	    qassert(addr.size() == 3 && addr[2] < 3);
 
 	    uint16_t*dst = reinterpret_cast<uint16_t*> (data);
 	    uint16_t*src = reinterpret_cast<uint16_t*> (cache_) + addr[0]*pla_;
@@ -349,13 +349,15 @@ QWidget* PnmFile::HDU::create_view_dialog(QWidget*dialog_parent)
       if (addr.size() > 2) addr[2] = 0;
 
       for (addr[1] = 0 ; addr[1] < axes[1] ; addr[1] += 1) {
-
-	    get_line(addr, wid, rowr);
+	    int rc = get_line(addr, wid, rowr);
+	    qassert(rc >= 0);
 	    if (rowg != rowr) {
 		  addr[2] = 1;
-		  get_line(addr, wid, rowg);
+		  rc = get_line(addr, wid, rowg);
+		  qassert(rc >= 0);
 		  addr[2] = 2;
-		  get_line(addr, wid, rowb);
+		  rc = get_line(addr, wid, rowb);
+		  qassert(rc >= 0);
 		  addr[2] = 0;
 	    }
 	    for (int idx = 0 ; idx < axes[0] ; idx += 1) {

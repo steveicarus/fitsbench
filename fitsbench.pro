@@ -6,7 +6,7 @@ INCLUDEPATH += ./sub/include
 
 FORMS += fitsbench.ui
 
-HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h
+HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h qassert.h
 SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp PnmFile.cpp ScratchImage.cpp Previewer.cpp DataArray.cpp main.cpp
 
 FORMS += simple.ui
