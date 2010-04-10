@@ -131,27 +131,57 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
       for (int idx = 0 ; idx < naxis ; idx += 1)
 	    fpixel[idx] = 1;
 
-      unsigned char*rrow = new unsigned char [naxes[0]];
-      unsigned char*grow = new unsigned char [naxes[0]];
-      unsigned char*brow = new unsigned char [naxes[0]];
-      for (int ydx = 0 ; ydx < naxes[1] ; ydx += 1) {
-	    fpixel[1] = ydx+1;
-	    fpixel[2] = ridx;
-	    int anynul = 0;
-	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, rrow, &anynul, &status);
-	    fpixel[2] = gidx;
-	    anynul = 0;
-	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, grow, &anynul, &status);
-	    fpixel[2] = bidx;
-	    anynul = 0;
-	    fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, brow, &anynul, &status);
-	    for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
-		  image.setPixel(xdx, ydx, qRgba(rrow[xdx], grow[xdx], brow[xdx], 0xff));
+      if (bitpix == TBYTE) {
+	    unsigned char*rrow = new unsigned char [naxes[0]];
+	    unsigned char*grow = new unsigned char [naxes[0]];
+	    unsigned char*brow = new unsigned char [naxes[0]];
+	    for (int ydx = 0 ; ydx < naxes[1] ; ydx += 1) {
+		  fpixel[1] = ydx+1;
+		  fpixel[2] = ridx;
+		  int anynul = 0;
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, rrow, &anynul, &status);
+		  fpixel[2] = gidx;
+		  anynul = 0;
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, grow, &anynul, &status);
+		  fpixel[2] = bidx;
+		  anynul = 0;
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, brow, &anynul, &status);
+		  for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
+			image.setPixel(xdx, ydx, qRgba(rrow[xdx], grow[xdx], brow[xdx], 0xff));
+		  }
 	    }
+	    delete[]rrow;
+	    delete[]grow;
+	    delete[]brow;
+      } else if (bitpix == TUSHORT) {
+	    unsigned short*rrow = new unsigned short [naxes[0]];
+	    unsigned short*grow = new unsigned short [naxes[0]];
+	    unsigned short*brow = new unsigned short [naxes[0]];
+	    for (int ydx = 0 ; ydx < naxes[1] ; ydx += 1) {
+		  fpixel[1] = ydx+1;
+		  fpixel[2] = ridx;
+		  int anynul = 0;
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, rrow, &anynul, &status);
+		  fpixel[2] = gidx;
+		  anynul = 0;
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, grow, &anynul, &status);
+		  fpixel[2] = bidx;
+		  anynul = 0;
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, brow, &anynul, &status);
+		  for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
+			image.setPixel(xdx, ydx, qRgba(qBound(0,rrow[xdx]>>8,255),
+						       qBound(0,grow[xdx]>>8,255),
+						       qBound(0,brow[xdx]>>8,255),
+						       0xff));
+		  }
+	    }
+	    delete[]rrow;
+	    delete[]grow;
+	    delete[]brow;
+      } else {
+	    QString text = QString ("I don't know how to render bitpix=%1").arg(bitpix);
+	    QMessageBox::warning(0, "FITS render error", text);
       }
-      delete[]rrow;
-      delete[]grow;
-      delete[]brow;
 
       delete[]fpixel;
 }
@@ -257,8 +287,9 @@ int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
       int status = 0;
       int hdu_type = 0;
       fits->movabs_hdu(hdu_num_, hdu_type, status);
+      fits->get_line_chdu(addr, wid, type, data, status);
 
-      return fits->get_line_chdu(addr, wid, type, data, status);
+      return status==0? 0 : -1;
 }
 
 void FitsFile::HDU::fill_in_info_table(QTableWidget*widget)
@@ -312,6 +343,12 @@ QWidget* FitsFile::HDU::create_view_dialog(QWidget*dialog_parent)
 		   // render that.
 	    fits->render_chdu(image, 1, 1, 1, status);
 	    break;
+      }
+
+      if (status != 0) {
+	    char status_str[FLEN_STATUS];
+	    fits_get_errstatus(status, status_str);
+	    QMessageBox::warning(0, "FITS (cfitsio) error", status_str);
       }
 
       return new SimpleImageView(dialog_parent, image, getDisplayName());
