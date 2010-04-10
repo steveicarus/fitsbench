@@ -64,6 +64,7 @@ class FitsbenchMain : public QMainWindow {
       int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_fft2d_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
       int ftcl_phase_corr_(int objc, Tcl_Obj*const objv[]);
 
 	// Stubs to convert the Tcl interpreter's call to the command
@@ -77,6 +78,8 @@ class FitsbenchMain : public QMainWindow {
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_fft2d_thunk_(ClientData obj, Tcl_Interp*interp,
+				     int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_minmax_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_phase_corr_thunk_(ClientData obj, Tcl_Interp*interp,
 					int objc, Tcl_Obj*CONST objv[]);

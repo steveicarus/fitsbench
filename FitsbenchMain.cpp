@@ -34,6 +34,7 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "axes",            &FitsbenchMain::ftcl_axes_thunk_ },
       { "bench",           &FitsbenchMain::ftcl_bench_thunk_ },
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
+      { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },
       { "scratch",         &FitsbenchMain::ftcl_scratch_thunk_ },
       { 0, 0}

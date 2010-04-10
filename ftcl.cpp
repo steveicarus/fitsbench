@@ -19,7 +19,7 @@
 
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
-# include  <assert.h>
+# include  "qassert.h"
 
 using namespace std;
 
@@ -79,6 +79,14 @@ int FitsbenchMain::ftcl_axes_thunk_(ClientData raw, Tcl_Interp*interp,
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
       assert(eng->tcl_engine_ == interp);
       return eng->ftcl_axes_(objc, objv);
+}
+
+int FitsbenchMain::ftcl_minmax_thunk_(ClientData raw, Tcl_Interp*interp,
+				      int objc, Tcl_Obj*CONST objv[])
+{
+      FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
+      assert(eng->tcl_engine_ == interp);
+      return eng->ftcl_minmax_(objc, objv);
 }
 
 int FitsbenchMain::ftcl_scratch_thunk_(ClientData raw, Tcl_Interp*interp,
@@ -161,6 +169,102 @@ int FitsbenchMain::ftcl_axes_(int objc, Tcl_Obj*const objv[])
 
       return TCL_OK;
 }
+
+template <class T> static void minmax_in_line(const T*buf, long wid,
+					      const vector<long>&addr,
+					      T&min_val, vector<long>&min_pnt,
+					      T&max_val, vector<long>&max_pnt)
+{
+      if (min_pnt.size() == 0) {
+	    min_pnt = addr;
+	    min_val = buf[0];
+      }
+      if (max_pnt.size() == 0) {
+	    max_pnt = addr;
+	    max_val = buf[0];
+      }
+
+      for (int idx = 0 ; idx < wid ; idx += 1) {
+	    if (buf[idx] > max_val) {
+		  max_val = buf[idx];
+		  max_pnt = addr;
+		  max_pnt[0] = idx;
+	    }
+	    if (buf[idx] < min_val) {
+		  min_val = buf[idx];
+		  min_pnt = addr;
+		  min_pnt[0] = idx;
+	    }
+      }
+}
+
+int FitsbenchMain::ftcl_minmax_(int objc, Tcl_Obj*const objv[])
+{
+      if (objc < 2) {
+	    Tcl_AppendResult(tcl_engine_, "Missing image argument.", 0);
+	    return TCL_ERROR;
+      }
+
+      FitsbenchItem*item_raw = item_from_name_(objv[1]);
+      if (item_raw == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Named argument not found.", 0);
+	    return TCL_ERROR;
+      }
+
+      DataArray*item = dynamic_cast<DataArray*> (item_raw);
+      if (item == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Named argument is not a data array", 0);
+	    return TCL_ERROR;
+      }
+
+      if (item->get_type() == DataArray::DT_VOID)
+	    return TCL_OK;
+
+      vector<long> axes = item->get_axes();
+      vector<long> addr = DataArray::zero_addr(axes.size());
+
+      vector<long> min_pnt;
+      vector<long> max_pnt;
+
+      Tcl_Obj*res_obj[4];
+
+      if (item->get_type() == DataArray::DT_UINT8) {
+	    uint8_t min_val, max_val;
+	    uint8_t*buf = new uint8_t[axes[0]];
+	    do {
+		  int rc = item->get_line(addr, axes[0], buf);
+		  qassert(rc >= 0);
+		  minmax_in_line(buf, axes[0], addr, min_val, min_pnt, max_val, max_pnt);
+	    } while (DataArray::incr(addr, axes, 1));
+	    delete[]buf;
+
+	    res_obj[0] = Tcl_NewLongObj(min_val);
+	    res_obj[2] = Tcl_NewLongObj(max_val);
+
+      } else if (item->get_type() == DataArray::DT_UINT16) {
+	    uint16_t min_val, max_val;
+	    uint16_t*buf = new uint16_t[axes[0]];
+	    do {
+		  int rc = item->get_line(addr, axes[0], buf);
+		  qassert(rc >= 0);
+		  minmax_in_line(buf, axes[0], addr, min_val, min_pnt, max_val, max_pnt);
+	    } while (DataArray::incr(addr, axes, 1));
+	    delete[]buf;
+
+	    res_obj[0] = Tcl_NewLongObj(min_val);
+	    res_obj[2] = Tcl_NewLongObj(max_val);
+
+      } else {
+	    Tcl_AppendResult(tcl_engine_, "Unknown data array type.", 0);
+	    return TCL_ERROR;
+      }
+
+      res_obj[1] = listobj_from_vector_(min_pnt);
+      res_obj[3] = listobj_from_vector_(max_pnt);
+
+      Tcl_SetObjResult(tcl_engine_, Tcl_NewListObj(4, res_obj));
+      return TCL_OK;
+      }
 
 int FitsbenchMain::ftcl_scratch_(int objc, Tcl_Obj*const objv[])
 {
