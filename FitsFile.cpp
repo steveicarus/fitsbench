@@ -131,7 +131,7 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
       for (int idx = 0 ; idx < naxis ; idx += 1)
 	    fpixel[idx] = 1;
 
-      if (bitpix == TBYTE) {
+      if (bitpix == BYTE_IMG) {
 	    unsigned char*rrow = new unsigned char [naxes[0]];
 	    unsigned char*grow = new unsigned char [naxes[0]];
 	    unsigned char*brow = new unsigned char [naxes[0]];
@@ -153,7 +153,7 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
 	    delete[]rrow;
 	    delete[]grow;
 	    delete[]brow;
-      } else if (bitpix == TUSHORT) {
+      } else if (bitpix == USHORT_IMG) {
 	    unsigned short*rrow = new unsigned short [naxes[0]];
 	    unsigned short*grow = new unsigned short [naxes[0]];
 	    unsigned short*brow = new unsigned short [naxes[0]];
@@ -190,16 +190,32 @@ int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
 			    DataArray::type_t type, void*data, int&status)
 {
       int rc = 0;
+
+	// Make sure the axes counts are correct. (cfitsio will not
+	// check this, and instead will gleefully run past the end of
+	// the fpixel array...)
+      int naxes = 0;
+      get_img_dim(naxes, status);
+      qassert(naxes==addr.size());
+
       long*fpixel = new long [addr.size()];
       for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
 	    fpixel[idx] = addr[idx];
 
-      if (type==DataArray::DT_UINT8) {
-	    int anynul = 0;
+      int anynul = 0;
+      switch (type) {
+	  case DataArray::DT_UINT8:
 	    fits_read_pix(fd_, TBYTE, fpixel, wid, 0, data, &anynul, &status);
+	    break;
+	  case DataArray::DT_UINT16:
+	    fits_read_pix(fd_, TUSHORT, fpixel, wid, 0, data, &anynul, &status);
+	    break;
 
-      } else {
+	  default:
+	    QMessageBox::warning(0, "FitsFile::get_line_chdu",
+				 "Unsupported data type?");
 	    rc = -1;
+	    break;
       }
 
       delete[]fpixel;
@@ -283,11 +299,22 @@ int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
 
       if (get_type() != type)
 	    return -1;
+	// Fits addresses are 1-based (FORTRAN) whereas DataArray
+	// addresses are zero-based.
+      vector<long>fits_addr = addr;
+      for (size_t idx = 0 ; idx < fits_addr.size() ; idx += 1)
+	    fits_addr[idx] += 1;
 
       int status = 0;
       int hdu_type = 0;
       fits->movabs_hdu(hdu_num_, hdu_type, status);
-      fits->get_line_chdu(addr, wid, type, data, status);
+      fits->get_line_chdu(fits_addr, wid, type, data, status);
+
+      if (status != 0) {
+	    char status_str[FLEN_STATUS];
+	    fits_get_errstatus(status, status_str);
+	    QMessageBox::warning(0, "FITS (cfitsio) get_line_raw", status_str);
+      }
 
       return status==0? 0 : -1;
 }
