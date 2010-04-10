@@ -31,6 +31,14 @@ static inline uint16_t bswap_16(uint16_t val)
 # include  <byteswap.h>
 #endif
 
+static inline uint16_t fe_to_host(uint16_t val, QSysInfo::Endian file_end_)
+{
+      if (QSysInfo::ByteOrder == file_end_)
+	    return val;
+      else
+	    return bswap_16(val);
+}
+
 using namespace std;
 
 static int next_word(FILE*fd)
@@ -61,6 +69,8 @@ PnmFile::PnmFile(const QString&name, const QFileInfo&path)
 : BenchFile(name, path)
 {
       fd_ = fopen(filePath().toLocal8Bit().constData(), "rb");
+
+      file_endian_ = QSysInfo::BigEndian;
 
       char chr;
       chr = fgetc(fd_);
@@ -255,7 +265,7 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
 	    uint16_t*src = reinterpret_cast<uint16_t*> (cache_) + addr[0]*pla_;
 
 	    src += addr[2];
-	    if (QSysInfo::ByteOrder != QSysInfo::BigEndian) {
+	    if (QSysInfo::ByteOrder != file_endian_) {
 		  for (int idx = 0 ; idx < wid ; idx += 1) {
 			*dst = bswap_16(*src);
 			dst += 1;
@@ -276,25 +286,130 @@ int PnmFile::get_line_raw(const std::vector<long>&addr, long wid,
       return -1;
 }
 
-int PnmFile::HDU::get_line8(const std::vector<long>&addr, long wid, uint8_t*data)
+void PnmFile::render_image(QImage&image)
 {
-      type_t pixtype = get_type();
+      image = QImage(wid_, hei_, QImage::Format_ARGB32);
 
-      if (pixtype == DT_UINT8)
-	    return get_line(addr, wid, data);
+      if (planes()==3 && bpv()==2)
+	    render_rgb16_(image);
+      else if (planes()==3)
+	    render_rgb8_(image);
+      else if (planes()==1 && bpv()==2)
+	    render_gray16_(image);
+      else
+	    render_gray8_(image);
+}
 
-      if (pixtype == DT_UINT16) {
-	    uint16_t*data16 = new uint16_t[wid];
-	    int rc = get_line(addr, wid, data16);
-	    if (rc < 0) return rc;
+void PnmFile::render_gray8_(QImage&image)
+{
+      int rc;
+      uint8_t*buf = new uint8_t[wid_];
 
-	    for (int idx = 0 ; idx < wid ; idx += 1)
-		  data[idx] = data16[idx] >> 8;
+      rc = fsetpos(fd_, &data_);
 
-	    return rc;
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 1, wid_, fd_);
+	    qassert(cnt == wid_);
+	    for (size_t xdx = 0 ; xdx < wid_ ; xdx += 1) {
+		  image.setPixel(xdx, ydx, qRgba(buf[xdx],buf[xdx],buf[xdx],0xff));
+	    }
       }
 
-      return -1;
+      delete[]buf;
+}
+
+void PnmFile::render_rgb8_(QImage&image)
+{
+      int rc;
+      uint8_t*buf = new uint8_t[3*wid_];
+
+      rc = fsetpos(fd_, &data_);
+
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 1, 3*wid_, fd_);
+	    qassert(cnt == 3*wid_);
+	    for (size_t xdx = 0 ; xdx < 3*wid_ ; xdx += 3) {
+		  image.setPixel(xdx, ydx, qRgba(buf[xdx+0],buf[xdx+1],buf[xdx+2],0xff));
+	    }
+      }
+
+      delete[]buf;
+}
+
+void PnmFile::render_gray16_(QImage&image)
+{
+      int rc;
+      uint16_t*buf = new uint16_t[wid_];
+
+      rc = fsetpos(fd_, &data_);
+      qassert(rc >= 0);
+
+	// First make a pass through the data to get a scale.
+      uint32_t max_val = 0;
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 2, wid_, fd_);
+	    qassert(cnt == wid_);
+	    for (size_t xdx = 0 ; xdx < wid_ ; xdx += 1) {
+		  uint32_t tmp = fe_to_host(buf[xdx], file_endian_);
+		  if (tmp > max_val)
+			max_val = tmp;
+	    }
+      }
+
+      rc = fsetpos(fd_, &data_);
+      qassert(rc >= 0);
+
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 2, wid_, fd_);
+	    qassert(cnt == wid_);
+	    for (size_t xdx = 0 ; xdx < wid_ ; xdx += 1) {
+		  uint32_t tmp = fe_to_host(buf[xdx], file_endian_) * 255 / max_val;
+		  if (tmp > 255) tmp = 255;
+		  image.setPixel(xdx, ydx, qRgba(tmp,tmp,tmp,0xff));
+	    }
+      }
+
+      delete[]buf;
+}
+
+void PnmFile::render_rgb16_(QImage&image)
+{
+      int rc;
+      uint16_t*buf = new uint16_t[3*wid_];
+
+      rc = fsetpos(fd_, &data_);
+      qassert(rc >= 0);
+
+	// First make a pass through the data to get a scale.
+      uint32_t max_val = 0;
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 2, 3*wid_, fd_);
+	    qassert(cnt == 3*wid_);
+	    for (size_t xdx = 0 ; xdx < 3*wid_ ; xdx += 1) {
+		  uint32_t tmp = fe_to_host(buf[xdx], file_endian_);
+		  if (tmp > max_val)
+			max_val = tmp;
+	    }
+      }
+
+      rc = fsetpos(fd_, &data_);
+      qassert(rc >= 0);
+
+      for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
+	    size_t cnt = fread(buf, 2, 3*wid_, fd_);
+	    qassert(cnt == 3*wid_);
+	    for (size_t xdx = 0 ; xdx < 3*wid_ ; xdx += 3) {
+		  uint32_t tmp_r = fe_to_host(buf[xdx+0], file_endian_) * 255 / max_val;
+		  uint32_t tmp_g = fe_to_host(buf[xdx+1], file_endian_) * 255 / max_val;
+		  uint32_t tmp_b = fe_to_host(buf[xdx+2], file_endian_) * 255 / max_val;
+		  if (tmp_r > 255) tmp_r = 255;
+		  if (tmp_g > 255) tmp_g = 255;
+		  if (tmp_b > 255) tmp_b = 255;
+		  image.setPixel(xdx, ydx, qRgba(tmp_r,tmp_g,tmp_b,0xff));
+	    }
+      }
+
+      delete[]buf;
 }
 
 static void append_row(QTableWidget*widget, const QString&col1, const QString&col2, const QString&col3)
@@ -349,46 +464,11 @@ void PnmFile::HDU::fill_in_info_table(QTableWidget*widget)
 
 QWidget* PnmFile::HDU::create_view_dialog(QWidget*dialog_parent)
 {
-      vector<long> axes = get_axes();
+      PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
+      qassert(pnm);
 
-      long wid = axes[0];
-
-      QImage image (axes[0], axes[1], QImage::Format_ARGB32);
-
-      uint8_t*rowr = new uint8_t[wid];
-      uint8_t*rowg, *rowb;
-      if (axes.size() > 2) {
-	    rowg = new uint8_t[wid];
-	    rowb = new uint8_t[wid];
-      } else {
-	    rowg = rowr;
-	    rowb = rowr;
-      }
-
-      vector<long> addr (axes.size());
-      addr[0] = 0;
-      if (addr.size() > 2) addr[2] = 0;
-
-      for (addr[1] = 0 ; addr[1] < axes[1] ; addr[1] += 1) {
-	    int rc = get_line8(addr, wid, rowr);
-	    qassert(rc >= 0);
-	    if (rowg != rowr) {
-		  addr[2] = 1;
-		  rc = get_line8(addr, wid, rowg);
-		  qassert(rc >= 0);
-		  addr[2] = 2;
-		  rc = get_line8(addr, wid, rowb);
-		  qassert(rc >= 0);
-		  addr[2] = 0;
-	    }
-	    for (int idx = 0 ; idx < axes[0] ; idx += 1) {
-		  image.setPixel(idx, addr[1], qRgba(rowr[idx], rowg[idx], rowb[idx], 0xff));
-	    }
-      }
-
-      if (rowb != rowr) delete[]rowb;
-      if (rowg != rowr) delete[]rowg;
-      delete[]rowr;
+      QImage image;
+      pnm->render_image(image);
 
       return new SimpleImageView(dialog_parent, image, getDisplayName());
 }

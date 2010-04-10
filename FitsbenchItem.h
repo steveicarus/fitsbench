@@ -145,8 +145,6 @@ class PnmFile : public BenchFile {
 	    int get_line_raw(const std::vector<long>&addr, long wid,
 			     type_t pixtype, void*data);
 
-	    int get_line8(const std::vector<long>&addr, long wid, uint8_t*data);
-
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
 	    QWidget*create_view_dialog(QWidget*parent);
@@ -162,6 +160,8 @@ class PnmFile : public BenchFile {
       size_t planes() const { return pla_; }
       long  datamax() const { return max_; }
 
+      void render_image(QImage&image);
+
 	// Bytes per value
       size_t bpv() const { return max_ >= 256? 2 : 1; }
 
@@ -170,10 +170,17 @@ class PnmFile : public BenchFile {
 		       DataArray::type_t pixtype, void*data);
 
     private:
+      void render_gray8_(QImage&image);
+      void render_gray16_(QImage&image);
+      void render_rgb8_(QImage&image);
+      void render_rgb16_(QImage&image);
+
+    private:
       FILE*fd_;
 
       HDU*hdu_;
 
+      QSysInfo::Endian file_endian_; // Endian-ness of the image
       size_t wid_;
       size_t hei_;
       size_t pla_; // Pixel planes (1 or 3)
