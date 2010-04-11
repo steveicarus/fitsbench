@@ -229,7 +229,7 @@ int FitsbenchMain::ftcl_minmax_(int objc, Tcl_Obj*const objv[])
       Tcl_Obj*res_obj[4];
 
       if (item->get_type() == DataArray::DT_UINT8) {
-	    uint8_t min_val, max_val;
+	    uint8_t min_val = 0xff, max_val = 0x00;
 	    uint8_t*buf = new uint8_t[axes[0]];
 	    do {
 		  int rc = item->get_line(addr, axes[0], buf);
@@ -242,7 +242,7 @@ int FitsbenchMain::ftcl_minmax_(int objc, Tcl_Obj*const objv[])
 	    res_obj[2] = Tcl_NewLongObj(max_val);
 
       } else if (item->get_type() == DataArray::DT_UINT16) {
-	    uint16_t min_val, max_val;
+	    uint16_t min_val = 0xffff, max_val = 0x0000;
 	    uint16_t*buf = new uint16_t[axes[0]];
 	    do {
 		  int rc = item->get_line(addr, axes[0], buf);
