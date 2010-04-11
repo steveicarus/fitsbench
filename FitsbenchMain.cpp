@@ -32,6 +32,7 @@ using namespace std;
 
 const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "axes",            &FitsbenchMain::ftcl_axes_thunk_ },
+      { "bayer_decompose", &FitsbenchMain::ftcl_bayer_decomp_thunk_ },
       { "bench",           &FitsbenchMain::ftcl_bench_thunk_ },
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },

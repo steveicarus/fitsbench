@@ -31,6 +31,8 @@ SimpleImageView::SimpleImageView(QWidget*parent, const QImage&image, const QStri
 
       setWindowTitle(title);
 
+      scene_.setBackgroundBrush(Qt::black);
+
       QPixmap pix = QPixmap::fromImage(image);
       scene_.addPixmap(pix);
       ui.graphics->setScene(&scene_);

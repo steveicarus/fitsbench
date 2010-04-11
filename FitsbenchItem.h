@@ -210,6 +210,8 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
       int set_line_raw(const std::vector<long>&addr, long wid,
 		       DataArray::type_t type, const void*data);
 
+      int set_line_alpha(const std::vector<long>&addr, long wid, const uint8_t*data);
+
     private:
       template <class T> int do_set_line_(size_t off, long wid, const T*data);
 
@@ -219,7 +221,8 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
 
     private:
       QWidget*create_view_double_(QWidget*dialog_parent, const double*array);
-      QWidget*create_view_uint8_(QWidget*dialog_parent, const uint8_t*array);
+      QWidget*create_view_uint8_(QWidget*dialog_parent,  const uint8_t*array);
+      QWidget*create_view_uint16_(QWidget*dialog_parent, const uint16_t*array);
 
     private:
       std::vector<long> axes_;
@@ -233,6 +236,9 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
 	    uint32_t*array_uint32_;
 	    double*array_dbl_;
       };
+
+	// Optional alpha mask for all the pixels of the image.
+      uint8_t*alpha_;
 };
 
 #endif

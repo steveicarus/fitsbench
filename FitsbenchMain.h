@@ -61,6 +61,7 @@ class FitsbenchMain : public QMainWindow {
 	// Implementations of TCL commands...
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);
       int ftcl_axes_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[]);
       int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
@@ -72,6 +73,8 @@ class FitsbenchMain : public QMainWindow {
 				   int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_axes_thunk_(ClientData obj, Tcl_Interp*interp,
 				  int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_bayer_decomp_thunk_(ClientData obj, Tcl_Interp*interp,
+					  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_crop_thunk_(ClientData obj, Tcl_Interp*interp,
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,

@@ -11,6 +11,21 @@ item. For example, a 640x480 grayscale image has the axes dimensions
 multi-spectral images put color information in another axis. So an RGB
 color image would have axes dimensions "640 480 3".
 
+* bayer_decompose <dst-red> <dst-green> <dst-blue> <src>
+
+Decompose a grayscale image captured by a bayer filtered sensor into
+red, green and blue planes. All the planes have the resolution of the
+original, but only some of the pixel values are valid. For each plane
+where a pixel value is not valid, mark that pixel blank by setting its
+alpha mask to zero.
+
+One way to get a source image that has the properties that this
+function expects is with the dcraw command, like so:
+
+   dcraw -v -D -4 -o 0 -W -r 1.0 1.0 1.0 1.0 foo.NEF
+
+This will produce a file "foo.pgm" that is a 16bit PGM file. Load that
+and use it as a source for the bayer_decompose function.
 
 * bench names
 

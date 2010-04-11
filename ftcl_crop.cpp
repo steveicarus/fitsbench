@@ -92,11 +92,14 @@ int FitsbenchMain::ftcl_crop_(int objc, Tcl_Obj*const objv[])
       ui.bench_tree->addTopLevelItem(dst);
       set_bench_script_name_(dst, Tcl_GetString(objv[1]));
 
-      unsigned char*data = 0;
+      void*data = 0;
 
       switch (dst_type) {
 	  case DataArray::DT_UINT8:
 	    data = new unsigned char[dst_axes[0]];
+	    break;
+	  case DataArray::DT_UINT16:
+	    data = new uint16_t[dst_axes[0]];
 	    break;
 	  default:
 	    qassert(0);
