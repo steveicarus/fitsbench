@@ -87,7 +87,6 @@ class FitsbenchMain : public QMainWindow {
 
     private slots:
 	// Menu actions
-      void action_OpenFITS_slot_(void);
       void action_OpenImage_slot_(void);
 
 	// Slots to handle widget signals

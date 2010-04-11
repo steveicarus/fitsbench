@@ -111,33 +111,28 @@ void FitsbenchMain::clear_bench_script_names_(FitsbenchItem*item)
       }
 }
 
-void FitsbenchMain::action_OpenFITS_slot_(void)
-{
-      QString start_dir;
-      QString filter (tr("FITS Data files (*.fit *.fits *.fts)"));
-
-      QStringList files = QFileDialog::getOpenFileNames(this, tr("Select FITS files to open."),
-							start_dir, filter);
-
-      for (int idx = 0 ; idx < files.size() ; idx += 1) {
-	    QFileInfo path = files.at(idx);
-	    FitsFile*item = new FitsFile(path.fileName(), path);
-	    ui.bench_tree->addTopLevelItem(item);
-      }
-}
-
 void FitsbenchMain::action_OpenImage_slot_(void)
 {
       QString start_dir;
-      QString filter (tr("Images (*.pgm *.ppm)"));
+      QString filter (tr("PNM Images (*.pgm *.ppm)"
+			 ";;FITS Data files (*.fit *.fits *.fts)"
+			 ";;Any (*.pgm *.ppm *.fit *.fits *.fts)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
 							start_dir, filter);
 
       for (int idx = 0 ; idx < files.size() ; idx += 1) {
 	    QFileInfo path = files.at(idx);
-	    BenchFile*item = new PnmFile(path.fileName(), path);
-	    ui.bench_tree->addTopLevelItem(item);
+	    QString suff = path.completeSuffix();
+
+	    BenchFile*item = 0;
+	    if (suff=="fit" || suff=="fits" || suff=="fts") {
+		  item = new FitsFile(path.fileName(), path);
+	    } else if (suff=="pgm" || suff=="ppm") {
+		  item = new PnmFile(path.fileName(), path);
+	    }
+
+	    if (item) ui.bench_tree->addTopLevelItem(item);
       }
 }
 
