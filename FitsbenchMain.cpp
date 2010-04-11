@@ -45,9 +45,6 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 {
       ui.setupUi(this);
 
-      connect(ui.actionOpenFITS,
-	      SIGNAL(triggered()),
-	      SLOT(action_OpenFITS_slot_()));
       connect(ui.actionOpenImage,
 	      SIGNAL(triggered()),
 	      SLOT(action_OpenImage_slot_()));
@@ -114,8 +111,8 @@ void FitsbenchMain::clear_bench_script_names_(FitsbenchItem*item)
 void FitsbenchMain::action_OpenImage_slot_(void)
 {
       QString start_dir;
-      QString filter (tr("PNM Images (*.pgm *.ppm)"
-			 ";;FITS Data files (*.fit *.fits *.fts)"
+      QString filter (tr("FITS Data files (*.fit *.fits *.fts)"
+			 ";;PNM Images (*.pgm *.ppm)"
 			 ";;Any (*.pgm *.ppm *.fit *.fits *.fts)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
