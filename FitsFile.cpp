@@ -187,7 +187,8 @@ void FitsFile::render_chdu(QImage&image, int ridx, int gidx, int bidx, int&statu
 }
 
 int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
-			    DataArray::type_t type, void*data, int&status)
+			    DataArray::type_t type, void*data,
+			    int&has_alpha, uint8_t*alpha, int&status)
 {
       int rc = 0;
 
@@ -203,12 +204,14 @@ int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
 	    fpixel[idx] = addr[idx];
 
       int anynul = 0;
+      char*nulmask = new char[wid];
+
       switch (type) {
 	  case DataArray::DT_UINT8:
-	    fits_read_pix(fd_, TBYTE, fpixel, wid, 0, data, &anynul, &status);
+	    fits_read_pixnull(fd_, TBYTE, fpixel, wid, data, nulmask, &anynul, &status);
 	    break;
 	  case DataArray::DT_UINT16:
-	    fits_read_pix(fd_, TUSHORT, fpixel, wid, 0, data, &anynul, &status);
+	    fits_read_pixnull(fd_, TUSHORT, fpixel, wid, data, nulmask, &anynul, &status);
 	    break;
 
 	  default:
@@ -218,6 +221,17 @@ int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
 	    break;
       }
 
+      if (anynul) {
+	    for (int idx = 0 ; idx < wid ; idx += 1) {
+		  if (alpha) alpha[idx] = nulmask[idx]? 0x00 : 0xff;
+		  if (nulmask[idx]) has_alpha += 1;
+	    }
+      } else {
+	    if (alpha) memset(alpha, 0xff, wid);
+	    has_alpha = 0;
+      }
+
+      delete[]nulmask;
       delete[]fpixel;
       return rc;
 }
@@ -292,7 +306,8 @@ DataArray::type_t FitsFile::HDU::get_type(void) const
 }
 
 int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
-				type_t type, void*data)
+				type_t type, void*data,
+				int&has_alpha, uint8_t*alpha)
 {
       FitsFile*fits = dynamic_cast<FitsFile*> (parent());
       qassert(fits);
@@ -308,7 +323,7 @@ int FitsFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
       int status = 0;
       int hdu_type = 0;
       fits->movabs_hdu(hdu_num_, hdu_type, status);
-      fits->get_line_chdu(fits_addr, wid, type, data, status);
+      fits->get_line_chdu(fits_addr, wid, type, data, has_alpha, alpha, status);
 
       if (status != 0) {
 	    char status_str[FLEN_STATUS];

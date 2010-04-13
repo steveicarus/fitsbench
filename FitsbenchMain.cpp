@@ -37,6 +37,7 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },
+      { "pixbin",          &FitsbenchMain::ftcl_pixbin_thunk_ },
       { "scratch",         &FitsbenchMain::ftcl_scratch_thunk_ },
       { 0, 0}
 };

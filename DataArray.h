@@ -66,13 +66,15 @@ class DataArray {
       int set_line(const std::vector<long>&addr, long wid, const T*data);
 
       template <class T>
-      int get_line(const std::vector<long>&addr, long wid, T*data);
+      int get_line(const std::vector<long>&addr, long wid, T*data,
+		   int&has_alpha, uint8_t*alpha =0);
 
       virtual int set_line_raw(const std::vector<long>&addr, long wid,
 			       type_t type, const void*data);
 
       virtual int get_line_raw(const std::vector<long>&addr, long wid,
-			       type_t type, void*data);
+			       type_t type, void*data,
+			       int&has_alpha, uint8_t*alpha);
 
     public:
 	// These are some convenient N-dimensional address
@@ -114,25 +116,25 @@ template <> inline int DataArray::set_line<double>(const std::vector<long>&addr,
 template <> inline int DataArray::set_line< std::complex<double> >(const std::vector<long>&addr, long wid, const std::complex<double>*data)
 { return set_line_raw(addr, wid, DT_COMPLEX, data); }
 
-template <> inline int DataArray::get_line<int8_t>(const std::vector<long>&addr, long wid, int8_t*data)
-{ return get_line_raw(addr, wid, DT_INT8, data); }
-template <> inline int DataArray::get_line<int16_t>(const std::vector<long>&addr, long wid, int16_t*data)
-{ return get_line_raw(addr, wid, DT_INT16, data); }
-template <> inline int DataArray::get_line<int32_t>(const std::vector<long>&addr, long wid, int32_t*data)
-{ return get_line_raw(addr, wid, DT_INT32, data); }
-template <> inline int DataArray::get_line<int64_t>(const std::vector<long>&addr, long wid, int64_t*data)
-{ return get_line_raw(addr, wid, DT_INT64, data); }
+template <> inline int DataArray::get_line<int8_t>(const std::vector<long>&addr, long wid, int8_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_INT8, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<int16_t>(const std::vector<long>&addr, long wid, int16_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_INT16, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<int32_t>(const std::vector<long>&addr, long wid, int32_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_INT32, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<int64_t>(const std::vector<long>&addr, long wid, int64_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_INT64, data, has_alpha, alpha); }
 
-template <> inline int DataArray::get_line<uint8_t>(const std::vector<long>&addr, long wid, uint8_t*data)
-{ return get_line_raw(addr, wid, DT_UINT8, data); }
-template <> inline int DataArray::get_line<uint16_t>(const std::vector<long>&addr, long wid, uint16_t*data)
-{ return get_line_raw(addr, wid, DT_UINT16, data); }
-template <> inline int DataArray::get_line<uint32_t>(const std::vector<long>&addr, long wid, uint32_t*data)
-{ return get_line_raw(addr, wid, DT_UINT32, data); }
-template <> inline int DataArray::get_line<uint64_t>(const std::vector<long>&addr, long wid, uint64_t*data)
-{ return get_line_raw(addr, wid, DT_UINT64, data); }
+template <> inline int DataArray::get_line<uint8_t>(const std::vector<long>&addr, long wid, uint8_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_UINT8, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<uint16_t>(const std::vector<long>&addr, long wid, uint16_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_UINT16, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<uint32_t>(const std::vector<long>&addr, long wid, uint32_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_UINT32, data, has_alpha, alpha); }
+template <> inline int DataArray::get_line<uint64_t>(const std::vector<long>&addr, long wid, uint64_t*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_UINT64, data, has_alpha, alpha); }
 
-template <> inline int DataArray::get_line<double>(const std::vector<long>&addr, long wid, double*data)
-{ return get_line_raw(addr, wid, DT_DOUBLE, data); }
+template <> inline int DataArray::get_line<double>(const std::vector<long>&addr, long wid, double*data, int&has_alpha, uint8_t*alpha)
+{ return get_line_raw(addr, wid, DT_DOUBLE, data, has_alpha, alpha); }
 
 #endif

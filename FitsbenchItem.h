@@ -83,7 +83,8 @@ class FitsFile : public BenchFile {
 	    type_t get_type(void) const;
 
 	    int get_line_raw(const std::vector<long>&addr, long wid,
-			     type_t type, void*data);
+			     type_t type, void*data,
+			     int&has_alpha, uint8_t*alpha);
 
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
@@ -100,13 +101,19 @@ class FitsFile : public BenchFile {
 	// Render the image of the current HDU into the QImage. If it
 	// is a 2D image, then render it as a grayscale image. If it
 	// is 3D, then the red, green and blue integers are indexes
-	// into the thrid dimension to select planes for an RGB
+	// into the third dimension to select planes for an RGB
 	// rendering. Use FITS conventions for plane numberings,
 	// i.e. the first plane is 1, the second 2, etc.
+	// The status is the cfitsio status.
       void render_chdu(QImage&image, int red, int green, int blu, int&status);
 
+	// Get a line of image data from the current HDU. Use FITS
+	// conventions for pixel numberings, i.e. start from 1 instead
+	// of start from 0.
+	// The status is the cfitsio status.
       int get_line_chdu(const std::vector<long>&addr, long wid,
-			DataArray::type_t type, void*data, int&status);
+			DataArray::type_t type, void*data,
+			int&has_alpha, uint8_t*alpha, int&status);
 
     public:
 	// CFITSIO-like methods (See the cfitsio documentation)
@@ -143,7 +150,8 @@ class PnmFile : public BenchFile {
 	    type_t get_type(void) const;
 
 	    int get_line_raw(const std::vector<long>&addr, long wid,
-			     type_t pixtype, void*data);
+			     type_t pixtype, void*data,
+			     int&has_alpha, uint8_t*alpha);
 
 	  protected: // Implementations for Previewer
 	    void fill_in_info_table(QTableWidget*);
@@ -212,8 +220,13 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
 
       int set_line_alpha(const std::vector<long>&addr, long wid, const uint8_t*data);
 
+      virtual int get_line_raw(const std::vector<long>&addr, long wid,
+			       type_t type, void*data,
+			       int&has_alpha, uint8_t*alpha);
+
     private:
       template <class T> int do_set_line_(size_t off, long wid, const T*data);
+      template <class T> int do_get_line_(size_t off, long wid, T*data);
 
     protected: // Implementations for Previewer
       void fill_in_info_table(QTableWidget*);
@@ -227,6 +240,8 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
     private:
       std::vector<long> axes_;
       DataArray::type_t type_;
+
+      size_t addr_to_offset_(const std::vector<long>&addr) const;
 
       template <class T> T*get_array_(void);
       void delete_by_type_(void);

@@ -31,6 +31,22 @@ int FitsbenchMain::ftcl_crop_thunk_(ClientData raw, Tcl_Interp*interp,
       return eng->ftcl_crop_(objc, objv);
 }
 
+template <class T> void do_crop(ScratchImage*dst, DataArray*src,
+				const vector<long>&src_point, T*data)
+{
+      vector<long>dst_axes = dst->get_axes();
+      vector<long>dst_addr = DataArray::zero_addr(dst_axes.size());
+
+      do {
+	    int has_alpha = 0;
+	    vector<long> src_addr = DataArray::add(src_point, dst_addr);
+	    int rc = src->get_line(src_addr, dst_axes[0], data, has_alpha, 0);
+	    qassert(rc >= 0);
+	    qassert(has_alpha == 0);
+	    dst->set_line(dst_addr, dst_axes[0], data);
+      } while (DataArray::incr(dst_addr, dst_axes, 1));
+}
+
 /*
  * The crop command usage is:
  *
@@ -92,29 +108,17 @@ int FitsbenchMain::ftcl_crop_(int objc, Tcl_Obj*const objv[])
       ui.bench_tree->addTopLevelItem(dst);
       set_bench_script_name_(dst, Tcl_GetString(objv[1]));
 
-      void*data = 0;
-
-      switch (dst_type) {
-	  case DataArray::DT_UINT8:
-	    data = new unsigned char[dst_axes[0]];
-	    break;
-	  case DataArray::DT_UINT16:
-	    data = new uint16_t[dst_axes[0]];
-	    break;
-	  default:
+      if (dst_type == DataArray::DT_UINT8) {
+	    uint8_t*data = new uint8_t[dst_axes[0]];
+	    do_crop(dst, src, src_point, data);
+	    delete[]data;
+      } else if (dst_type == DataArray::DT_UINT16) {
+	    uint16_t*data = new uint16_t[dst_axes[0]];
+	    do_crop(dst, src, src_point, data);
+	    delete[]data;
+      } else {
 	    qassert(0);
       }
-
-      vector<long>dst_addr = DataArray::zero_addr(dst_axes.size());
-
-      do {
-	    vector<long> src_addr = DataArray::add(src_point, dst_addr);
-	    int rc = src->get_line_raw(src_addr, dst_axes[0], dst_type, data);
-	    qassert(rc >= 0);
-	    dst->set_line_raw(dst_addr, dst_axes[0], dst_type, data);
-      } while (DataArray::incr(dst_addr, dst_axes, 1));
-
-      delete[]data;
 
       return TCL_OK;
 }

@@ -165,10 +165,16 @@ DataArray::type_t PnmFile::HDU::get_type(void) const
 }
 
 int PnmFile::HDU::get_line_raw(const std::vector<long>&addr, long wid,
-			       type_t pixtype, void*data)
+			       type_t pixtype, void*data,
+			       int&has_alpha, uint8_t*alpha)
 {
       PnmFile*pnm = dynamic_cast<PnmFile*> (parent());
       qassert(pnm);
+
+	// There is no concept of alpha plane information in PNM files.
+      has_alpha = 0;
+      if (alpha) memset(alpha, 0xff, wid);
+
       return pnm->get_line_raw(addr, wid, pixtype, data);
 }
 

@@ -38,8 +38,10 @@ template<class src_t> static void do_get_complex_array(const std::vector<long>&a
 
       vector<long> src_ptr = DataArray::zero_addr(axes.size());
       do {
-	    int rc = src->get_line(src_ptr, axes[0], src_buf);
+	    int has_alpha = 0;
+	    int rc = src->get_line(src_ptr, axes[0], src_buf, has_alpha);
 	    qassert(rc >= 0);
+	    qassert(has_alpha == 0);
 	    for (long idx = 0 ; idx < axes[0] ; idx += 1) {
 		  dst[0][0] = src_buf[idx];
 		  dst[0][1] = 0.0;

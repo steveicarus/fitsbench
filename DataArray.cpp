@@ -31,7 +31,7 @@ std::vector<long> DataArray::get_axes(void) const
       return std::vector<long> ();
 }
 
-int DataArray::get_line_raw(const std::vector<long>&, long, type_t, void*)
+int DataArray::get_line_raw(const std::vector<long>&, long, type_t, void*, int&, uint8_t*)
 {
       return -1;
 }

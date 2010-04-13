@@ -126,9 +126,11 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
       dst_addr[0] = 0;
       for (int ydx = 0 ; ydx < dst_axes[1] ; ydx += 1) {
 	    int rc;
+	    int has_alpha = 0;
 	    src_addr[1] = ydx;
-	    rc = src->get_line(src_addr, dst_axes[0], src0);
+	    rc = src->get_line(src_addr, dst_axes[0], src0, has_alpha);
 	    qassert(rc >= 0);
+	    qassert(has_alpha == 0);
 
 	    if (ydx%2 == 0) {
 		  for (int xdx = 0 ; xdx < dst_axes[0] ; xdx += 2) {

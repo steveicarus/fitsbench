@@ -107,6 +107,18 @@ DataArray::type_t ScratchImage::get_type(void) const
       return type_;
 }
 
+size_t ScratchImage::addr_to_offset_(const vector<long>&addr) const
+{
+      size_t off = addr[0];
+      size_t dim_siz = axes_[0];
+      for (size_t idx = 1 ; idx < axes_.size() ; idx += 1) {
+	    off += dim_siz * addr[idx];
+	    dim_siz *= axes_[idx];
+      }
+
+      return off;
+}
+
 template <> inline double*ScratchImage::get_array_<double>(void)
 {
 	// Only if this really is a DOUBLE type.
@@ -173,12 +185,7 @@ int ScratchImage::set_line_raw(const std::vector<long>&addr, long wid,
       qassert(addr.size() == axes_.size());
       qassert(type == type_);
 
-      size_t off = addr[0];
-      size_t dim_siz = axes_[0];
-      for (size_t idx = 1 ; idx < axes_.size() ; idx += 1) {
-	    off += dim_siz * addr[idx];
-	    dim_siz *= axes_[idx];
-      }
+      size_t off = addr_to_offset_(addr);
 
       switch (type) {
 	  case DT_DOUBLE:
@@ -208,16 +215,69 @@ int ScratchImage::set_line_alpha(const std::vector<long>&addr, long wid, const u
       if (addr[0]+wid > axes_[0])
 	    return -1;
 
-      size_t off = addr[0];
-      size_t dim_siz = axes_[0];
-      for (size_t idx = 1 ; idx < axes_.size() ; idx += 1) {
-	    off += dim_siz * addr[idx];
-	    dim_siz *= axes_[idx];
-      }
+      size_t off = addr_to_offset_(addr);
 
       memcpy(alpha_ + off, data, wid);
 
       return 0;
+}
+
+template <class T> int ScratchImage::do_get_line_(size_t off, long wid, T*dst)
+{
+      T*src = get_array_<T>() + off;
+      for (int idx = 0 ; idx < wid ; idx += 1)
+	    *dst++ = *src++;
+      return 0;
+}
+
+int ScratchImage::get_line_raw(const std::vector<long>&addr, long wid,
+			       type_t type, void*data,
+			       int&has_alpha, uint8_t*alpha)
+{
+      qassert(addr.size() == axes_.size());
+      qassert(type == type_);
+
+      size_t off = addr_to_offset_(addr);
+      int rc = 0;
+
+      switch (type) {
+	  case DT_DOUBLE:
+	    rc = do_get_line_(off, wid, reinterpret_cast<double*>(data));
+	    break;
+	  case DT_UINT8:
+	    rc = do_get_line_(off, wid, reinterpret_cast<uint8_t*>(data));
+	    break;
+	  case DT_UINT16:
+	    rc = do_get_line_(off, wid, reinterpret_cast<uint16_t*>(data));
+	    break;
+	  case DT_UINT32:
+	    rc = do_get_line_(off, wid, reinterpret_cast<uint32_t*>(data));
+	    break;
+	  default:
+	    qassert(0);
+	    return -1;
+      }
+
+      if (alpha_ == 0) {
+	    has_alpha = 0;
+	    if (alpha) memset(alpha, 0xff, wid);
+      } else {
+	    uint8_t*alp = alpha_+off;
+	    has_alpha = 0;
+	    if (alpha) {
+		  for (int idx = 0 ; idx < wid ; idx += 1) {
+			*alpha = *alp++;
+			if (*alpha != 0xff) has_alpha += 1;
+			alpha += 1;
+		  }
+	    } else {
+		  for (int idx = 0 ; idx < wid ; idx += 1) {
+			if (*alp++ != 0xff) has_alpha += 1;
+		  }
+	    }
+      }
+
+      return rc;
 }
 
 static void append_row(QTableWidget*widget, const QString&col1, const QString&col2, const QString&col3)
@@ -349,7 +409,7 @@ QWidget* ScratchImage::create_view_uint16_(QWidget*dialog_parent, const uint16_t
       QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
 
       for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
-	    int val = array[idx] * 255 / max_val;
+	    uint32_t val = array[idx] * 255 / max_val;
 	    if (val > 255) val = 255;
 	    if (val < 0)   val = 0;
 
