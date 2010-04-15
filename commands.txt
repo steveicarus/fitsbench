@@ -22,9 +22,9 @@ alpha mask to zero.
 One way to get a source image that has the properties that this
 function expects is with the dcraw command, like so:
 
-   dcraw -v -D -4 -o 0 -W -r 1.0 1.0 1.0 1.0 foo.NEF
+   dcraw -v -T -D -4 -o 0 -W -r 1.0 1.0 1.0 1.0 foo.NEF
 
-This will produce a file "foo.pgm" that is a 16bit PGM file. Load that
+This will produce a file "foo.tiff" that is a 16bit TIFF file. Load that
 and use it as a source for the bayer_decompose function.
 
 * bench names

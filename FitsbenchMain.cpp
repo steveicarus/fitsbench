@@ -115,7 +115,8 @@ void FitsbenchMain::action_OpenImage_slot_(void)
       QString start_dir;
       QString filter (tr("FITS Data files (*.fit *.fits *.fts)"
 			 ";;PNM Images (*.pgm *.ppm)"
-			 ";;Any (*.pgm *.ppm *.fit *.fits *.fts)"));
+			 ";;TIFF Images (*.tif *.tiff)"
+			 ";;Any (*.pgm *.ppm *.tif *.tiff *.fit *.fits *.fts)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
 							start_dir, filter);
@@ -129,6 +130,8 @@ void FitsbenchMain::action_OpenImage_slot_(void)
 		  item = new FitsFile(path.fileName(), path);
 	    } else if (suff=="pgm" || suff=="ppm") {
 		  item = new PnmFile(path.fileName(), path);
+	    } else if (suff=="tif" || suff=="tiff") {
+		  item = new TiffFile(path.fileName(), path);
 	    }
 
 	    if (item) ui.bench_tree->addTopLevelItem(item);

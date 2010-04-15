@@ -24,6 +24,7 @@
 # include  <QFileInfo>
 # include  <vector>
 # include  <fitsio.h>
+# include  <tiffio.h>
 # include  "Previewer.h"
 # include  "DataArray.h"
 
@@ -197,6 +198,59 @@ class PnmFile : public BenchFile {
 
       long cache_y_;
       uint8_t*cache_;
+};
+
+class TiffFile : public BenchFile {
+
+      class HDU : public FitsbenchItem, public Previewer, public DataArray {
+	  public:
+	    explicit HDU(TiffFile*parent, tdir_t dirnum);
+	    ~HDU();
+
+	  public: // Implementations for DataArray
+	    std::vector<long> get_axes(void) const;
+	    type_t get_type(void) const;
+
+	    int get_line_raw(const std::vector<long>&addr, long wid,
+			     type_t pixtype, void*data,
+			     int&has_alpha, uint8_t*alpha);
+
+	  protected: // Implementations for Previewer
+	    void fill_in_info_table(QTableWidget*);
+	    QWidget*create_view_dialog(QWidget*parent);
+
+	  private:
+	    template <class T> int get_line_buf(long x, long wid, T*dst);
+
+	  private:
+	    tdir_t dirnum_;
+	    type_t type_;
+	    std::vector<long> axes_;
+
+	    long cache_y_;
+	    unsigned char* cache_;
+      };
+
+    public:
+      explicit TiffFile(const QString&name, const QFileInfo&path);
+      ~TiffFile();
+
+      void render_image(QImage&image, TiffFile::HDU*ptr);
+
+    public:
+	// TiffFile verisons of tiffio functions.
+      int readScanline(tdata_t buf, uint32 row, tsample_t sample);
+      tsize_t scanlineSize(void);
+      int setDirectory(tdir_t dirnum);
+      template <class T> int getFieldDefaulted(ttag_t tag, T&val);
+
+    private:
+      template <class T> void do_render_image_gray(QImage&image, uint32 wid, uint32 hei, T*buf);
+
+    private:
+      TIFF*fd_;
+      std::vector<HDU*> hdu_table_;
+
 };
 
 /*
