@@ -22,6 +22,7 @@
 # include  <qapplication.h>
 # include  <QTreeWidgetItem>
 # include  <QFileInfo>
+# include  <map>
 # include  <vector>
 # include  <fitsio.h>
 # include  <tiffio.h>
@@ -318,11 +319,31 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
  */
 class WorkFolder  : public BenchFile {
 
+    public: // Object types that can be contained in a WorkFolder
+
+      class Image : public FitsbenchItem, public DataArray {
+	  public:
+	    Image(WorkFolder*folder, const QString&name);
+	    ~Image();
+
+	    WorkFolder* folder();
+
+	    int copy_from_array(const DataArray*src);
+
+	  private:
+	    fitsfile*fd_;
+      };
+
     public:
       WorkFolder (const QString&name, const QDir&path);
       ~WorkFolder();
 
+	// Return the folder item by name. If the item doesn't exist,
+	// create it.
+      Image* get_image(const QString&name);
+
     private:
+      std::map<QString,Image*> child_map_;
 };
 
 #endif

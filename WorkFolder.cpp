@@ -21,6 +21,8 @@
 # include  <QDir>
 # include  "qassert.h"
 
+using namespace std;
+
 WorkFolder::WorkFolder(const QString&name, const QDir&path)
 : BenchFile(name, path.path())
 {
@@ -28,4 +30,45 @@ WorkFolder::WorkFolder(const QString&name, const QDir&path)
 
 WorkFolder::~WorkFolder()
 {
+}
+
+WorkFolder::Image* WorkFolder::get_image(const QString&name)
+{
+      Image*&ptr = child_map_[name];
+
+      if (ptr == 0) {
+	    ptr = new Image(this, name);
+      }
+
+      return ptr;
+}
+
+/*
+ * Implement the WorkFolder items using FITS files. An image is a
+ * fits file with a single HDU that contains the data array.
+ */
+WorkFolder::Image::Image(WorkFolder*folder, const QString&name)
+: FitsbenchItem(folder)
+{
+      fd_ = 0;
+      setDisplayName(name);
+}
+
+WorkFolder::Image::~Image()
+{
+      if (fd_) {
+	    int status = 0;
+	    fits_close_file(fd_, &status);
+      }
+}
+
+WorkFolder* WorkFolder::Image::folder()
+{
+      return dynamic_cast<WorkFolder*> (parent());
+}
+
+int WorkFolder::Image::copy_from_array(const DataArray*that)
+{
+	// Not implemented yet
+      return -1;
 }

@@ -37,6 +37,29 @@ FitsbenchItem* FitsbenchMain::item_from_name_(Tcl_Obj*obj) const
       return item_from_name_(idx_nam);
 }
 
+WorkFolder::Image* FitsbenchMain::workitem_from_name_(Tcl_Obj*obj) const
+{
+      QString path = Tcl_GetString(obj);
+
+      if (path.count('/') != 1)
+	    return 0;
+
+      int slash_idx = path.indexOf('/');
+      if (slash_idx == 0 || slash_idx == path.size()-1)
+	    return 0;
+
+      string folder_name = path.left(slash_idx).toStdString();
+      QString name = path.mid(slash_idx+1);
+
+      FitsbenchItem* folder_item = item_from_name_(folder_name);
+      if (folder_item == 0) return 0;
+
+      WorkFolder*folder = dynamic_cast<WorkFolder*> (folder_item);
+      if (folder == 0) return 0;
+
+      return folder->get_image(name);
+}
+
 vector<long> FitsbenchMain::vector_from_listobj_(Tcl_Obj*obj)
 {
       Tcl_Obj**axes_objv = 0;

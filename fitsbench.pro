@@ -25,7 +25,7 @@ HEADERS += SimpleImageView.h
 SOURCES += SimpleImageView.cpp
 
 # Script command implementations...
-SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_crop.cpp ftcl_fft.cpp ftcl_pixbin.cpp
+SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_copy.cpp ftcl_crop.cpp ftcl_fft.cpp ftcl_pixbin.cpp
 
 LIBS += -ltcl
 

@@ -21,9 +21,9 @@
 
 # include  <qapplication.h>
 # include  "ui_fitsbench.h"
+# include  "FitsbenchItem.h"
 # include  <tcl.h>
 
-class FitsbenchItem;
 
 class FitsbenchMain : public QMainWindow {
 
@@ -51,6 +51,8 @@ class FitsbenchMain : public QMainWindow {
       FitsbenchItem* item_from_name_(const std::string&nam) const;
       FitsbenchItem* item_from_name_(Tcl_Obj*obj) const;
 
+      WorkFolder::Image* workitem_from_name_(Tcl_Obj*obj) const;
+
     private:
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
@@ -62,6 +64,7 @@ class FitsbenchMain : public QMainWindow {
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);
       int ftcl_axes_(int objc, Tcl_Obj*const objv[]);
       int ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_copy_(int objc, Tcl_Obj*const objv[]);
       int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
@@ -76,6 +79,8 @@ class FitsbenchMain : public QMainWindow {
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_bayer_decomp_thunk_(ClientData obj, Tcl_Interp*interp,
 					  int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_copy_thunk_(ClientData obj, Tcl_Interp*interp,
+				       int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_crop_thunk_(ClientData obj, Tcl_Interp*interp,
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,

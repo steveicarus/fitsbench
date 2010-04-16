@@ -35,6 +35,13 @@ Get a list of the bench tree items that have script names.
 
 Get the display string for the named item.
 
+* copy <work/dst> <src>
+
+Copy the source data array to the named item in the work folder. The
+source array can be any data array, the destination is of the form
+<folder>/<name>, where <folder> is the script-name for a Work Folder
+and the <name> is the name of a page within the folder.
+
 * crop <dst> <axes-list> <src> <start-point>
 
 Crop an array from the source. The destination can have fewer
