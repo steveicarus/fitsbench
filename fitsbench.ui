@@ -132,7 +132,16 @@
     <property name="title" >
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuNew" >
+     <property name="title" >
+      <string>New</string>
+     </property>
+     <addaction name="actionFITS_File" />
+     <addaction name="actionFITSBench_Work_Folder" />
+    </widget>
+    <addaction name="menuNew" />
     <addaction name="actionOpenImage" />
+    <addaction name="actionOpenFITSBench_Work_Folder" />
    </widget>
    <addaction name="menuFile" />
   </widget>
@@ -145,6 +154,21 @@
   <action name="actionOpenImage" >
    <property name="text" >
     <string>Open Image...</string>
+   </property>
+  </action>
+  <action name="actionFITS_File" >
+   <property name="text" >
+    <string>FITS File...</string>
+   </property>
+  </action>
+  <action name="actionFITSBench_Work_Folder" >
+   <property name="text" >
+    <string>FITSBench Work Folder...</string>
+   </property>
+  </action>
+  <action name="actionOpenFITSBench_Work_Folder" >
+   <property name="text" >
+    <string>Open FITSBench Work Folder...</string>
    </property>
   </action>
  </widget>

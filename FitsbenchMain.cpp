@@ -24,9 +24,10 @@
 # include  <QInputDialog>
 # include  <QLineEdit>
 # include  <QMenu>
+# include  <QMessageBox>
 # include  <QTreeWidget>
 # include  <iostream>
-# include  <cassert>
+# include  "qassert.h"
 
 using namespace std;
 
@@ -47,9 +48,18 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 {
       ui.setupUi(this);
 
+      connect(ui.actionFITS_File,
+	      SIGNAL(triggered()),
+	      SLOT(action_FITS_File_slot_()));
+      connect(ui.actionFITSBench_Work_Folder,
+	      SIGNAL(triggered()),
+	      SLOT(action_FITSBench_Work_Folder_slot_()));
       connect(ui.actionOpenImage,
 	      SIGNAL(triggered()),
 	      SLOT(action_OpenImage_slot_()));
+      connect(ui.actionOpenFITSBench_Work_Folder,
+	      SIGNAL(triggered()),
+	      SLOT(action_OpenFITSBench_Work_Folder_slot_()));
 
       connect(ui.bench_tree,
 	      SIGNAL(itemClicked(QTreeWidgetItem*,int)),
@@ -116,6 +126,7 @@ void FitsbenchMain::action_OpenImage_slot_(void)
       QString filter (tr("FITS Data files (*.fit *.fits *.fts)"
 			 ";;PNM Images (*.pgm *.ppm)"
 			 ";;TIFF Images (*.tif *.tiff)"
+			 ";;FITSBench Work Folders (*.fbw)"
 			 ";;Any (*.pgm *.ppm *.tif *.tiff *.fit *.fits *.fts)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
@@ -136,6 +147,67 @@ void FitsbenchMain::action_OpenImage_slot_(void)
 
 	    if (item) ui.bench_tree->addTopLevelItem(item);
       }
+}
+
+/*
+ * Open an existing FITSBench Work Folder. Ask the user for an
+ * existing directory, and use that directory to create the WorkFolder
+ * object.
+ */
+void FitsbenchMain::action_OpenFITSBench_Work_Folder_slot_(void)
+{
+      QString fname = QFileDialog::getExistingDirectory(0,
+                    tr("Select FITSBench Work Folder."));
+      if (fname.isEmpty())
+	  return;
+
+      QDir path = fname;
+      qassert(path.exists());
+
+      WorkFolder*item = new WorkFolder(path.dirName(), path);
+      ui.bench_tree->addTopLevelItem(item);
+}
+
+void FitsbenchMain::action_FITS_File_slot_(void)
+{
+      QMessageBox::information(this, tr("New FITS File"),
+			       "New FITS File not implemented yet.");
+}
+
+/*
+ * Create a new FITSBench Work Folder. Prompt the user for a new file
+ * name, create a directory from that file name, and create a
+ * WorkFolder object to reference that directory.
+ */
+void FitsbenchMain::action_FITSBench_Work_Folder_slot_(void)
+{
+      QString fname = QFileDialog::getSaveFileName(0,
+		    tr("New FITSBench Work Folder"),
+		    QString(), QString(), 0);
+      if (fname.isEmpty())
+	    return;
+
+      QFileInfo path = fname;
+
+      if (path.exists()) {
+	    QMessageBox::information(0, tr("File Exists"),
+		            QString("File exists and it not a directory"));
+	    return;
+      }
+
+      QDir path_dir = path.dir();
+
+      if (! path_dir.mkdir(path.fileName())) {
+	    QMessageBox::information(0, tr("ERROR"),
+			    QString("Unable to make directory %1 in %2")
+			    .arg(path.fileName()) .arg(path_dir.path()));
+	    return;
+      }
+
+      path_dir.cd(path.fileName());
+
+      WorkFolder*item = new WorkFolder(path_dir.dirName(), path_dir);
+      ui.bench_tree->addTopLevelItem(item);
 }
 
 /*

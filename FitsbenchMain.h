@@ -94,6 +94,9 @@ class FitsbenchMain : public QMainWindow {
     private slots:
 	// Menu actions
       void action_OpenImage_slot_(void);
+      void action_OpenFITSBench_Work_Folder_slot_(void);
+      void action_FITS_File_slot_(void);
+      void action_FITSBench_Work_Folder_slot_(void);
 
 	// Slots to handle widget signals
       void bench_tree_clicked_slot_(QTreeWidgetItem*, int);

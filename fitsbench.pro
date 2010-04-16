@@ -18,7 +18,7 @@ FORMS += fitsbench.ui
 HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h qassert.h
 SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp ScratchImage.cpp Previewer.cpp DataArray.cpp main.cpp
 
-SOURCES += PnmFile.cpp TiffFile.cpp
+SOURCES += PnmFile.cpp TiffFile.cpp WorkFolder.cpp
 
 FORMS += simple.ui
 HEADERS += SimpleImageView.h

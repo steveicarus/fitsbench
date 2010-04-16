@@ -310,4 +310,19 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
       uint8_t*alpha_;
 };
 
+/*
+ * A WorkFolder is a persistent collection of items. The folder is
+ * stored in the host file system as a directory. The items in the
+ * collection are stored as files. We work with files in order to
+ * avoid size constraints, and also to make the data persistent.
+ */
+class WorkFolder  : public BenchFile {
+
+    public:
+      WorkFolder (const QString&name, const QDir&path);
+      ~WorkFolder();
+
+    private:
+};
+
 #endif
