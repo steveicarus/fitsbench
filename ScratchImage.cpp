@@ -411,7 +411,6 @@ QWidget* ScratchImage::create_view_uint16_(QWidget*dialog_parent, const uint16_t
       for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
 	    uint32_t val = array[idx] * 255 / max_val;
 	    if (val > 255) val = 255;
-	    if (val < 0)   val = 0;
 
 	    int alpha = alpha_? alpha_[idx] : 0xff;
 	    image.setPixel(idx % axes_[0], idx / axes_[0],
