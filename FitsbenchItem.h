@@ -20,8 +20,9 @@
  */
 
 # include  <qapplication.h>
-# include  <QTreeWidgetItem>
+# include  <QDir>
 # include  <QFileInfo>
+# include  <QTreeWidgetItem>
 # include  <map>
 # include  <vector>
 # include  <fitsio.h>
@@ -116,6 +117,7 @@ class FitsFile : public BenchFile {
       int get_line_chdu(const std::vector<long>&addr, long wid,
 			DataArray::type_t type, void*data,
 			int&has_alpha, uint8_t*alpha, int&status);
+
 
     public:
 	// CFITSIO-like methods (See the cfitsio documentation)
@@ -321,14 +323,31 @@ class WorkFolder  : public BenchFile {
 
     public: // Object types that can be contained in a WorkFolder
 
-      class Image : public FitsbenchItem, public DataArray {
+      class Image : public FitsbenchItem, public Previewer, public DataArray {
 	  public:
 	    Image(WorkFolder*folder, const QString&name);
+	    Image(WorkFolder*folder, const QString&name, const QFileInfo&file);
 	    ~Image();
 
 	    WorkFolder* folder();
 
-	    int copy_from_array(const DataArray*src);
+	    int copy_from_array(DataArray*src);
+
+	  protected: // Implementations of Previewer virtual methods.
+	    void fill_in_info_table(QTableWidget*);
+	    QWidget* create_view_dialog(QWidget*dialog_parent);
+
+	  private:
+	    template<class T>int do_copy_lines_(DataArray*src, T*buf, int datatype);
+
+	      // Render the image of the current HDU into the QImage. If it
+	      // is a 2D image, then render it as a grayscale image. If it
+	      // is 3D, then the red, green and blue integers are indexes
+	      // into the third dimension to select planes for an RGB
+	      // rendering. Use FITS conventions for plane numberings,
+	      // i.e. the first plane is 1, the second 2, etc.
+	      // The status is the cfitsio status.
+	    void render_chdu_(QImage&image, int red, int green, int blu, int&status);
 
 	  private:
 	    fitsfile*fd_;
@@ -338,12 +357,17 @@ class WorkFolder  : public BenchFile {
       WorkFolder (const QString&name, const QDir&path);
       ~WorkFolder();
 
+      const QDir&work_dir() const { return work_path_; }
+
 	// Return the folder item by name. If the item doesn't exist,
 	// create it.
       Image* get_image(const QString&name);
 
     private:
+      QDir work_path_;
       std::map<QString,Image*> child_map_;
 };
+
+extern void show_fits_error_stack(const QString&str);
 
 #endif

@@ -197,7 +197,7 @@ int FitsFile::get_line_chdu(const std::vector<long>&addr, long wid,
 	// the fpixel array...)
       int naxes = 0;
       get_img_dim(naxes, status);
-      qassert(naxes==addr.size());
+      qassert(naxes==(int)addr.size());
 
       long*fpixel = new long [addr.size()];
       for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
@@ -394,4 +394,12 @@ QWidget* FitsFile::HDU::create_view_dialog(QWidget*dialog_parent)
       }
 
       return new SimpleImageView(dialog_parent, image, getDisplayName());
+}
+
+void show_fits_error_stack(const QString&title)
+{
+      char msg[FLEN_ERRMSG];
+      while (fits_read_errmsg(msg)) {
+	    QMessageBox::warning(0, title, msg);
+      }
 }

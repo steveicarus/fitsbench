@@ -41,4 +41,16 @@
 	    }								\
       } while(0)
 
+# define qinternal_error(msg) \
+      do { \
+	    QString text = QString("Function %1...\n%2:%3: %4")		\
+		  .arg(__PRETTY_FUNCTION__)				\
+		  .arg(__FILE__)					\
+		  .arg(__LINE__)					\
+		  .arg( (msg) );					\
+	    QMessageBox::StandardButton btn;				\
+	    btn = QMessageBox::warning(0, "Internal Error", text, QMessageBox::Abort|QMessageBox::Ignore, QMessageBox::Abort); \
+	    if (btn == QMessageBox::Abort) abort();			\
+      } while(0)
+
 #endif
