@@ -56,9 +56,25 @@ class FitsbenchMain : public QMainWindow {
     private:
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
+      Tcl_Channel tcl_stdout_;
 
       std::vector<long> vector_from_listobj_(Tcl_Obj*obj);
       Tcl_Obj* listobj_from_vector_(const std::vector<long>&axes);
+
+      static Tcl_ChannelType tcl_stdout_type_;
+
+	// Imlementations of TCL I/O functions...
+      int tcl_stdout_closeProc_(Tcl_Interp*);
+      int tcl_stdout_inputProc_(char*, int, int*);
+      int tcl_stdout_outputProc_(const char*buf, int toWrite, int*err);
+      void tcl_stdout_watchProc_(int);
+      int tcl_stdout_getHandleProc_(int, ClientData*);
+
+      static int tcl_stdout_close_thunk_(ClientData, Tcl_Interp*);
+      static int tcl_stdout_input_thunk_(ClientData, char*, int, int*);
+      static int tcl_stdout_output_thunk_(ClientData, CONST char*, int, int*);
+      static void tcl_stdout_watch_thunk_(ClientData, int);
+      static int tcl_stdout_getHandle_thunk_(ClientData, int, ClientData*);
 
 	// Implementations of TCL commands...
       int ftcl_bench_(int objc, Tcl_Obj*const objv[]);

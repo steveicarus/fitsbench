@@ -19,9 +19,106 @@
 
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
+# include  <errno.h>
 # include  "qassert.h"
 
 using namespace std;
+
+struct Tcl_ChannelType FitsbenchMain::tcl_stdout_type_ = {
+      0,
+      TCL_CHANNEL_VERSION_2,
+      &FitsbenchMain::tcl_stdout_close_thunk_,
+      &FitsbenchMain::tcl_stdout_input_thunk_,
+      &FitsbenchMain::tcl_stdout_output_thunk_,
+      0, // seekProc
+      0, // setOptionProc
+      0, // getOptionProc
+      &FitsbenchMain::tcl_stdout_watch_thunk_,
+      &FitsbenchMain::tcl_stdout_getHandle_thunk_,
+      0, // close2Proc
+      0, // blockModeProc
+      0, // flushProc
+      0, // handlerProc
+      0, // wideSeekProc
+      0  // threadActionProc
+};
+
+int FitsbenchMain::tcl_stdout_close_thunk_(ClientData data, Tcl_Interp*interp)
+{
+      FitsbenchMain*obj = reinterpret_cast<FitsbenchMain*> (data);
+      return obj->tcl_stdout_closeProc_(interp);
+}
+
+int FitsbenchMain::tcl_stdout_input_thunk_(ClientData data, char*buf, int len, int*err)
+{
+      FitsbenchMain*obj = reinterpret_cast<FitsbenchMain*> (data);
+      return obj->tcl_stdout_inputProc_(buf, len, err);
+}
+
+int FitsbenchMain::tcl_stdout_output_thunk_(ClientData data, CONST char*buf, int toWrite, int*err)
+{
+      FitsbenchMain*obj = reinterpret_cast<FitsbenchMain*> (data);
+      return obj->tcl_stdout_outputProc_(buf, toWrite, err);
+}
+
+void FitsbenchMain::tcl_stdout_watch_thunk_(ClientData data, int mask)
+{
+      FitsbenchMain*obj = reinterpret_cast<FitsbenchMain*> (data);
+      obj->tcl_stdout_watchProc_(mask);
+}
+
+int FitsbenchMain::tcl_stdout_getHandle_thunk_(ClientData data, int dir, ClientData*handlePtr)
+{
+      FitsbenchMain*obj = reinterpret_cast<FitsbenchMain*> (data);
+      return obj->tcl_stdout_getHandleProc_(dir, handlePtr);
+}
+
+int FitsbenchMain::tcl_stdout_closeProc_(Tcl_Interp*)
+{
+      return 0;
+}
+
+int FitsbenchMain::tcl_stdout_inputProc_(char*, int, int*err)
+{
+      *err = EINVAL;
+      return -1;
+}
+
+int FitsbenchMain::tcl_stdout_outputProc_(const char*buf, int toWrite, int*err)
+{
+      char*linebuf = new char [toWrite+1];
+      strncpy(linebuf, buf, toWrite);
+      linebuf[toWrite] = 0;
+
+      char*cp = linebuf;
+      while (*cp) {
+	    char*eol = strchr(cp, '\n');
+	    if (eol)
+		  *eol++ = 0;
+	    else
+		  eol = cp + strlen(cp);
+
+	    QString msg (cp);
+	    ui.commands_log->append(msg);
+
+	    cp = eol;
+      }
+
+      delete[]linebuf;
+      *err = 0;
+      return toWrite;
+}
+
+void FitsbenchMain::tcl_stdout_watchProc_(int)
+{
+}
+
+int FitsbenchMain::tcl_stdout_getHandleProc_(int, ClientData*handlePtr)
+{
+      *handlePtr = 0;
+      return TCL_ERROR;
+}
+
 
 FitsbenchItem* FitsbenchMain::item_from_name_(const string&name) const
 {

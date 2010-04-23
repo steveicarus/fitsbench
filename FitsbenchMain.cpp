@@ -77,6 +77,11 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 	      SLOT(commands_line_slot_()));
 
       tcl_engine_ = Tcl_CreateInterp();
+      tcl_stdout_ = Tcl_CreateChannel(&tcl_stdout_type_, "console", this, TCL_WRITABLE);
+      Tcl_RegisterChannel(tcl_engine_, tcl_stdout_);
+      Tcl_SetChannelOption(tcl_engine_, tcl_stdout_, "-buffering", "line");
+      Tcl_SetStdChannel(tcl_stdout_, TCL_STDOUT);
+
 
       for (int idx = 0 ; ftcl_commands[idx].name ; idx += 1)
 	    Tcl_CreateObjCommand(tcl_engine_, ftcl_commands[idx].name,
