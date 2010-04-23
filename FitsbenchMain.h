@@ -62,6 +62,8 @@ class FitsbenchMain : public QMainWindow {
       Tcl_Obj* listobj_from_vector_(const std::vector<long>&axes);
 
       static Tcl_ChannelType tcl_stdout_type_;
+      char tcl_stdout_linebuf_[2048];
+      size_t tcl_stdout_linebuf_fill_;
 
 	// Imlementations of TCL I/O functions...
       int tcl_stdout_closeProc_(Tcl_Interp*);

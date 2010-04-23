@@ -76,6 +76,7 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 	      SIGNAL(returnPressed()),
 	      SLOT(commands_line_slot_()));
 
+      tcl_stdout_linebuf_fill_ = 0;
       tcl_engine_ = Tcl_CreateInterp();
       tcl_stdout_ = Tcl_CreateChannel(&tcl_stdout_type_, "console", this, TCL_WRITABLE);
       Tcl_RegisterChannel(tcl_engine_, tcl_stdout_);
@@ -299,11 +300,13 @@ void FitsbenchMain::commands_line_slot_(void)
       int tcl_rc = Tcl_Eval(tcl_engine_, line.toStdString().c_str());
       QString msg (Tcl_GetStringResult(tcl_engine_));
 
-      QColor save_color = ui.commands_log->textColor();
-      QColor use_color = save_color;
-      if (tcl_rc != TCL_OK) use_color = QColor(255,0,0);
+      if (! msg.isEmpty()) {
+	    QColor save_color = ui.commands_log->textColor();
+	    QColor use_color = save_color;
+	    if (tcl_rc != TCL_OK) use_color = QColor(255,0,0);
 
-      ui.commands_log->setTextColor(use_color);
-      ui.commands_log->append(msg);
-      ui.commands_log->setTextColor(save_color);
+	    ui.commands_log->setTextColor(use_color);
+	    ui.commands_log->append(msg);
+	    ui.commands_log->setTextColor(save_color);
+      }
 }

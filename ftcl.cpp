@@ -86,27 +86,50 @@ int FitsbenchMain::tcl_stdout_inputProc_(char*, int, int*err)
 
 int FitsbenchMain::tcl_stdout_outputProc_(const char*buf, int toWrite, int*err)
 {
-      char*linebuf = new char [toWrite+1];
-      strncpy(linebuf, buf, toWrite);
-      linebuf[toWrite] = 0;
+      int res = 0;
 
-      char*cp = linebuf;
-      while (*cp) {
-	    char*eol = strchr(cp, '\n');
-	    if (eol)
+      while (toWrite > 0) {
+	    size_t trans = toWrite;
+	    if ((trans + tcl_stdout_linebuf_fill_) >= sizeof (tcl_stdout_linebuf_))
+		  trans = sizeof (tcl_stdout_linebuf_) - tcl_stdout_linebuf_fill_ - 1;
+
+	    memcpy(tcl_stdout_linebuf_ + tcl_stdout_linebuf_fill_, buf, trans);
+	    tcl_stdout_linebuf_fill_ += trans;
+	    buf += trans;
+	    toWrite -= trans;
+	    res += trans;
+
+	      // Eliminate any NULL bytes from the string, but make
+	      // sure the buffer it NULL terminated.
+	    for (size_t idx = 0 ; idx < tcl_stdout_linebuf_fill_ ; idx += 1) {
+		  if (tcl_stdout_linebuf_[idx] == 0)
+			tcl_stdout_linebuf_[idx] = '?';
+	    }
+	    tcl_stdout_linebuf_[tcl_stdout_linebuf_fill_] = 0;
+
+	      // Write to the display log, a line at a time.
+	    while (char*eol = strchr(tcl_stdout_linebuf_, '\n')) {
 		  *eol++ = 0;
-	    else
-		  eol = cp + strlen(cp);
 
-	    QString msg (cp);
-	    ui.commands_log->append(msg);
+		  QString msg(tcl_stdout_linebuf_);
+		  ui.commands_log->append(msg);
 
-	    cp = eol;
+		  size_t len = eol - tcl_stdout_linebuf_;
+		  memmove(tcl_stdout_linebuf_, eol, tcl_stdout_linebuf_fill_ - len);
+		  tcl_stdout_linebuf_fill_ -= len;
+	    }
+
+	      // If the linebuf is full, then force an output even if
+	      // the line isn't complete.
+	    if (tcl_stdout_linebuf_fill_+1 == sizeof (tcl_stdout_linebuf_)) {
+		  QString msg(tcl_stdout_linebuf_);
+		  ui.commands_log->append(msg);
+		  tcl_stdout_linebuf_fill_ = 0;
+	    }
       }
 
-      delete[]linebuf;
       *err = 0;
-      return toWrite;
+      return res;
 }
 
 void FitsbenchMain::tcl_stdout_watchProc_(int)
