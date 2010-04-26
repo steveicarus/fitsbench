@@ -29,6 +29,7 @@
 # include  <tiffio.h>
 # include  "Previewer.h"
 # include  "DataArray.h"
+# include  "DataTable.h"
 
 class QTableWidget;
 class SimpleImageView;
@@ -323,18 +324,31 @@ class WorkFolder  : public BenchFile {
 
     public: // Object types that can be contained in a WorkFolder
 
-      class Image : public FitsbenchItem, public Previewer, public DataArray {
+      class WorkFits : public FitsbenchItem, public Previewer {
+
+	  public:
+	    WorkFits(WorkFolder*folder, const QString&name);
+	    WorkFits(WorkFolder*folder, const QString&name, const QFileInfo&file);
+	    ~WorkFits();
+
+	    WorkFolder* folder();
+
+	  protected: // Implementations of Previewer firtual methods
+	    void fill_in_info_table(QTableWidget*);
+
+	  protected:
+	    fitsfile*fd_;
+      };
+
+      class Image : public WorkFits, public DataArray {
 	  public:
 	    Image(WorkFolder*folder, const QString&name);
 	    Image(WorkFolder*folder, const QString&name, const QFileInfo&file);
 	    ~Image();
 
-	    WorkFolder* folder();
-
 	    int copy_from_array(DataArray*src);
 
 	  protected: // Implementations of Previewer virtual methods.
-	    void fill_in_info_table(QTableWidget*);
 	    QWidget* create_view_dialog(QWidget*dialog_parent);
 
 	  private:
@@ -349,8 +363,33 @@ class WorkFolder  : public BenchFile {
 	      // The status is the cfitsio status.
 	    void render_chdu_(QImage&image, int red, int green, int blu, int&status);
 
-	  private:
-	    fitsfile*fd_;
+      };
+
+      class Table : public WorkFits, public DataTable {
+
+	  public:
+	    Table(WorkFolder*folder, const QString&name);
+	    Table(WorkFolder*folder, const QString&name, const QFileInfo&file);
+	    ~Table();
+
+	    int create_table(std::vector<column_t>&info);
+
+	    int set_value_int32(size_t row, size_t col, int32_t val);
+	    int set_value_string(size_t row, size_t col, const QString&val);
+
+	  public: // Implementations of DataTable virtual methods
+	    size_t table_cols();
+	    size_t table_rows();
+
+	    column_t table_col_info(size_t col);
+	    uint8_t table_value_uint8(size_t row, size_t col);
+	    int16_t table_value_int16(size_t row, size_t col);
+	    int32_t table_value_int32(size_t row, size_t col);
+	    QString table_value_string(size_t row, size_t col);
+
+	  protected: // Implementations of Previewer virtual methods.
+	    QWidget* create_view_dialog(QWidget*dialog_parent);
+
       };
 
     public:
@@ -359,13 +398,17 @@ class WorkFolder  : public BenchFile {
 
       const QDir&work_dir() const { return work_path_; }
 
-	// Return the folder item by name. If the item doesn't exist,
+	// Return the folder image by name. If the item doesn't exist,
 	// create it.
       Image* get_image(const QString&name);
 
+	// Return the folder table by name, or null if it doesn't exist.
+      Table* find_table(const QString&name);
+
     private:
       QDir work_path_;
-      std::map<QString,Image*> child_map_;
+      std::map<QString,Image*> image_map_;
+      std::map<QString,Table*> table_map_;
 };
 
 extern void show_fits_error_stack(const QString&str);

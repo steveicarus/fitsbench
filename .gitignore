@@ -2,11 +2,15 @@
 *~
 *.o
 
+# Work space for third-party sub-packages
+sub/*
+
 # Generated source files
 fitsbench
 Makefile
 ui_fitsbench.h
 ui_simple.h
+ui_simple_table.h
 moc_*.cpp
 
 # Mac OS X related build files

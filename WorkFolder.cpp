@@ -20,7 +20,8 @@
 # include  "FitsbenchItem.h"
 # include  <QDir>
 # include  <QTableWidget>
-# include  <SimpleImageView.h>
+# include  "SimpleImageView.h"
+# include  "SimpleTableView.h"
 # include  "qassert.h"
 
 using namespace std;
@@ -37,9 +38,14 @@ WorkFolder::WorkFolder(const QString&name, const QDir&path)
       for (int idx = 0 ; idx < files.size() ; idx += 1) {
 	    QString name = files[idx];
 	    QFileInfo item_path (path, name);
-	    if (name.endsWith(".fits"))
-		  name.chop(5);
-	    child_map_[name] = new Image(this, name, item_path);
+
+	    if (name.endsWith("-i.fits")) {
+		  name.chop(7);
+		  image_map_[name] = new Image(this, name, item_path);
+	    } else if (name.endsWith("-t.fits")) {
+		  name.chop(7);
+		  table_map_[name] = new Table(this, name, item_path);
+	    }
       }
 }
 
@@ -52,7 +58,7 @@ WorkFolder::~WorkFolder()
 
 WorkFolder::Image* WorkFolder::get_image(const QString&name)
 {
-      Image*&ptr = child_map_[name];
+      Image*&ptr = image_map_[name];
 
       if (ptr == 0) {
 	    ptr = new Image(this, name);
@@ -61,18 +67,23 @@ WorkFolder::Image* WorkFolder::get_image(const QString&name)
       return ptr;
 }
 
-/*
- * Implement the WorkFolder items using FITS files. An image is a
- * fits file with a single HDU that contains the data array.
- */
-WorkFolder::Image::Image(WorkFolder*folder, const QString&name)
+WorkFolder::Table* WorkFolder::find_table(const QString&name)
+{
+      map<QString,Table*>::iterator cur = table_map_.find(name);
+      if (cur == table_map_.end())
+	    return 0;
+      else
+	    return cur->second;
+}
+
+WorkFolder::WorkFits::WorkFits(WorkFolder*folder, const QString&name)
 : FitsbenchItem(folder)
 {
       fd_ = 0;
       setDisplayName(name);
 }
 
-WorkFolder::Image::Image(WorkFolder*folder, const QString&name, const QFileInfo&file)
+WorkFolder::WorkFits::WorkFits(WorkFolder*folder, const QString&name, const QFileInfo&file)
 : FitsbenchItem(folder)
 {
       qassert(file.exists());
@@ -81,9 +92,12 @@ WorkFolder::Image::Image(WorkFolder*folder, const QString&name, const QFileInfo&
       int status = 0;
       fits_open_diskfile(&fd_, file.filePath().toLocal8Bit().constData(),
 			 READWRITE, &status);
+      if (status != 0) {
+	    show_fits_error_stack(QString("Error opening %1").arg(file.filePath()));
+      }
 }
 
-WorkFolder::Image::~Image()
+WorkFolder::WorkFits::~WorkFits()
 {
       if (fd_) {
 	    int status = 0;
@@ -91,9 +105,50 @@ WorkFolder::Image::~Image()
       }
 }
 
-WorkFolder* WorkFolder::Image::folder()
+WorkFolder* WorkFolder::WorkFits::folder()
 {
       return dynamic_cast<WorkFolder*> (parent());
+}
+
+void WorkFolder::WorkFits::fill_in_info_table(QTableWidget*widget)
+{
+      if (fd_ == 0)
+	    return;
+
+      int status = 0;
+      int nkeys = 0;
+      int morekeys = 0;
+      fits_get_hdrspace(fd_, &nkeys, &morekeys, &status);
+
+      widget->setRowCount(nkeys);
+
+      for (int idx = 0 ; idx < nkeys ; idx += 1) {
+	    char key_buf [FLEN_KEYWORD];
+	    char val_buf [FLEN_VALUE];
+	    char com_buf [FLEN_COMMENT];
+	    fits_read_keyn(fd_, idx+1, key_buf, val_buf, com_buf, &status);
+	    widget->setItem(idx, 0, new QTableWidgetItem(key_buf));
+	    widget->setItem(idx, 1, new QTableWidgetItem(val_buf));
+	    widget->setItem(idx, 2, new QTableWidgetItem(com_buf));
+      }
+}
+
+/*
+ * Implement the WorkFolder items using FITS files. An image is a
+ * fits file with a single HDU that contains the data array.
+ */
+WorkFolder::Image::Image(WorkFolder*folder, const QString&name)
+    : WorkFits(folder, name)
+{
+}
+
+WorkFolder::Image::Image(WorkFolder*folder, const QString&name, const QFileInfo&file)
+: WorkFits(folder, name, file)
+{
+}
+
+WorkFolder::Image::~Image()
+{
 }
 
 int WorkFolder::Image::copy_from_array(DataArray*src)
@@ -103,7 +158,7 @@ int WorkFolder::Image::copy_from_array(DataArray*src)
 	    return -1;
       }
 
-      QFileInfo img_path (folder()->work_dir(), getDisplayName() + ".fits");
+      QFileInfo img_path (folder()->work_dir(), getDisplayName() + "-i.fits");
       qassert(! img_path.exists());
 
       QString path_str = img_path.filePath();
@@ -183,29 +238,6 @@ template<class T>int WorkFolder::Image::do_copy_lines_(DataArray*src,
 
       fits_flush_file(fd_, &status);
       return 0;
-}
-
-void WorkFolder::Image::fill_in_info_table(QTableWidget*widget)
-{
-      if (fd_ == 0)
-	    return;
-
-      int status = 0;
-      int nkeys = 0;
-      int morekeys = 0;
-      fits_get_hdrspace(fd_, &nkeys, &morekeys, &status);
-
-      widget->setRowCount(nkeys);
-
-      for (int idx = 0 ; idx < nkeys ; idx += 1) {
-	    char key_buf [FLEN_KEYWORD];
-	    char val_buf [FLEN_VALUE];
-	    char com_buf [FLEN_COMMENT];
-	    fits_read_keyn(fd_, idx+1, key_buf, val_buf, com_buf, &status);
-	    widget->setItem(idx, 0, new QTableWidgetItem(key_buf));
-	    widget->setItem(idx, 1, new QTableWidgetItem(val_buf));
-	    widget->setItem(idx, 2, new QTableWidgetItem(com_buf));
-      }
 }
 
 QWidget* WorkFolder::Image::create_view_dialog(QWidget*dialog_parent)
@@ -319,4 +351,219 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
       }
 
       delete[]fpixel;
+}
+
+WorkFolder::Table::Table(WorkFolder*folder, const QString&name)
+    : WorkFits(folder, name)
+{
+}
+
+WorkFolder::Table::Table(WorkFolder*folder, const QString&name, const QFileInfo&file)
+: WorkFits(folder, name, file)
+{
+      qassert(fd_);
+
+	// A workspace table FITS file is expected to have two HDUs,
+	// an empty primary and the table extension.
+      int status = 0;
+      int hdunum = 0;
+      fits_get_num_hdus(fd_, &hdunum, &status);
+      qassert(hdunum >= 2);
+
+      int hdutype = 0;
+      fits_movabs_hdu(fd_, 2, &hdutype, &status);
+      qassert(hdutype == ASCII_TBL || hdutype == BINARY_TBL);
+}
+
+WorkFolder::Table::~Table()
+{
+}
+
+int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
+{
+      if (fd_ != 0) return -1;
+
+      int status = 0;
+
+      QFileInfo img_path (folder()->work_dir(), getDisplayName() + "-t.fits");
+      qassert(! img_path.exists());
+      QString path_str = img_path.filePath();
+      fits_create_diskfile(&fd_, path_str.toLocal8Bit().constData(), &status);
+      if (status != 0) {
+	    show_fits_error_stack(path_str);
+	    return -1;
+      }
+
+      qassert(fd_);
+
+      vector<char*> ttype (info.size());
+      vector<char*> tform (info.size());
+      for (size_t idx = 0 ; idx < info.size() ; idx += 1) {
+	    DataTable::column_t&cur = info[idx];
+
+	    ttype[idx] = strdup(cur.heading.toAscii().constData());
+	    switch (cur.type) {
+		case DT_CHAR:
+		  tform[idx] = "A";
+		  break;
+		case DT_UINT8:
+		  tform[idx] = "B";
+		  break;
+		case DT_INT16:
+		  tform[idx] = "I";
+		  break;
+		case DT_INT32:
+		  tform[idx] = "J";
+		  break;
+		case DT_STRING:
+		  tform[idx] = "PA";
+		  break;
+		default:
+		  qinternal_error("Type code not implemented");
+		  tform[idx] = "A";
+		  break;
+	    }
+      }
+
+      fits_create_tbl(fd_, BINARY_TBL, 0, info.size(), &ttype[0], &tform[0],
+		      0, 0, &status);
+
+      for (size_t idx = 0 ; idx < info.size() ; idx += 1) {
+	    free(ttype[idx]);
+      }
+
+      return 0;
+}
+
+int WorkFolder::Table::set_value_int32(size_t row, size_t col, int32_t val)
+{
+      if (fd_ == 0) return -1;
+      if (col >= table_cols()) return -1;
+
+	// The row number allows for extending the table by one row to
+	// accomodate a new value. So allow a row number below the
+	// last.  The fits_write_col function will automaticall extend
+	// the table if needed.
+      if (row > table_rows()) return -1;
+
+      int status = 0;
+      fits_write_col(fd_, TINT32BIT, col+1, row+1, 1, 1, &val, &status);
+      if (status != 0) {
+	    show_fits_error_stack(QString("Error writing int32 at row=%1, col=%2").arg(row).arg(col));
+	    return -1;
+      }
+
+      return 0;
+}
+
+size_t WorkFolder::Table::table_cols()
+{
+      if (fd_ == 0)
+	    return 0;
+
+      int status = 0;
+      int ncols = 0;
+      fits_get_num_cols(fd_, &ncols, &status);
+      return ncols;
+}
+
+size_t WorkFolder::Table::table_rows()
+{
+      if (fd_ == 0)
+	    return 0;
+
+      int status = 0;
+      long nrows = 0;
+      fits_get_num_rows(fd_, &nrows, &status);
+      return nrows;
+}
+
+DataTable::column_t WorkFolder::Table::table_col_info(size_t col)
+{
+      column_t res;
+      if (fd_ == 0)
+	    return res;
+      if (col >= table_cols())
+	    return res;
+
+      int status = 0;
+      int typecode = 0;
+      long repeat = 0;
+      long width = 0;
+      fits_get_coltype(fd_, col+1, &typecode, &repeat, &width, &status);
+
+      char key_buf[FLEN_KEYWORD];
+      QString key_name = QString("%1").arg(col+1);
+      strncpy(key_buf, key_name.toAscii().constData(), sizeof key_buf);
+
+      char ttype[FLEN_VALUE];
+      int colnum = -1;
+      fits_get_colname(fd_, CASESEN, key_buf, ttype, &colnum, &status);
+      qassert((size_t)colnum == col+1);
+
+      res.heading = ttype;
+      res.array_count = repeat;
+      switch (typecode) {
+	  case TINT32BIT:
+	    res.type = DT_INT32;
+	    break;
+	  case -TSTRING: // Variable length array of char
+	    res.type = DT_STRING;
+	    break;
+	  default:
+	    qinternal_error(QString("Unhandled type code %1").arg(typecode));
+	    break;
+      }
+
+      return res;
+}
+
+uint8_t WorkFolder::Table::table_value_uint8(size_t row, size_t col)
+{
+      qassert(fd_ && col < table_cols() && row < table_rows());
+
+      int status = 0;
+      uint8_t val = 0;
+      fits_read_col(fd_, TBYTE, col+1, row+1, 0, 1, 0,
+		    &val, 0, &status);
+      qassert(status == 0);
+
+      return val;
+}
+
+int16_t WorkFolder::Table::table_value_int16(size_t row, size_t col)
+{
+      qassert(fd_ && col < table_cols() && row < table_rows());
+
+      int status = 0;
+      int16_t val = 0;
+      fits_read_col(fd_, TSHORT, col+1, row+1, 0, 1, 0,
+		    &val, 0, &status);
+      qassert(status == 0);
+
+      return val;
+}
+
+int32_t WorkFolder::Table::table_value_int32(size_t row, size_t col)
+{
+      qassert(fd_ && col < table_cols() && row < table_rows());
+
+      int status = 0;
+      int32_t val = 0;
+      fits_read_col(fd_, TINT32BIT, col+1, row+1, 1, 1, 0,
+		    &val, 0, &status);
+      if (status != 0) show_fits_error_stack(QString("Error reading int32 at row=%1, col=%2").arg(row).arg(col));
+
+      return val;
+}
+
+QString WorkFolder::Table::table_value_string(size_t, size_t)
+{
+      qinternal_error("not implemented");
+      return 0;
+}
+
+QWidget* WorkFolder::Table::create_view_dialog(QWidget*dialog_parent)
+{
+      return new SimpleTableView(dialog_parent, this, getDisplayName());
 }

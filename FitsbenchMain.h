@@ -53,6 +53,10 @@ class FitsbenchMain : public QMainWindow {
 
       WorkFolder::Image* workitem_from_name_(Tcl_Obj*obj) const;
 
+	// Convenience function for getting the existing folder for
+	// the name. The name part is returned to the nam argument.
+      WorkFolder* workfolder_from_name_(Tcl_Obj*obj, QString&nam) const;
+
     private:
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;
@@ -88,6 +92,7 @@ class FitsbenchMain : public QMainWindow {
       int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
       int ftcl_phase_corr_(int objc, Tcl_Obj*const objv[]);
       int ftcl_pixbin_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_table_(int objc, Tcl_Obj*const objv[]);
 
 	// Stubs to convert the Tcl interpreter's call to the command
 	// back to a method of this object.
@@ -109,6 +114,8 @@ class FitsbenchMain : public QMainWindow {
 					int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_pixbin_thunk_(ClientData obj, Tcl_Interp*interp,
 				    int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_table_thunk_(ClientData obj, Tcl_Interp*interp,
+				   int objc, Tcl_Obj*CONST objv[]);
       static const struct ftcl_command_table {
 	    const char*name;
 	    int (*thunk) (ClientData, Tcl_Interp*, int objc, Tcl_Obj*CONST objv[]);

@@ -75,3 +75,35 @@ Bin pixels from the source image into a reduced destination image. The
 accounts for blank pixels by not adding them into the result. The
 destination image is scaled by the number of input values per bin, so
 that the destination pixels have the same range as the source pixels.
+
+* table <name> create <column-info>...
+* table <name> cols
+* table <name> rows
+* table <name> set <row> <col> <value>
+
+These variants of the "table" command allow for manipulation of
+tables. In all cases the first argument is the table to manipulate,
+and the second argument is the table-specific command to perform. The
+table name is of the form <work>/<name> where <work> is the
+script-name for a work folder and <name> is the name of the table.
+
+ - create <column-info>...
+
+This subcommand creates a new table. The named table must not already
+exist. Each argument is a <column-info> list that describes the
+column. Each column-info item is a list: {<name> <type>}. The <name>
+is an ASCII name for the column heading, and the type is the type for
+values.
+
+ - cols
+ - rows
+
+These subcommands return the number of columns/rows in an existing
+table. If the table doesn't exist, they return zero.
+
+ - set <row> <col> <value>
+
+This sets the value in the table at <row> <col> in the able. The <col>
+must exist. The <row> must either exist or be exactly 1 past the last
+row. In the latter case, a new row is created to accomodate the new
+value. This is how new rows are added to the table.
