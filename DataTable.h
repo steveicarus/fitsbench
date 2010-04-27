@@ -41,10 +41,11 @@ class DataTable {
       };
 
       struct column_t {
-	    column_t(void) : type(DT_VOID), array_count(0) { }
+	    column_t(void) : type(DT_VOID), repeat(0), max_elements(0) { }
 	    QString heading;
 	    DataTable::type_t type;
-	    int array_count;
+	    int repeat;
+	    size_t max_elements;
       };
 
       static type_t type_from_string(const std::string&str);

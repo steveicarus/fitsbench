@@ -70,16 +70,16 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 						  &curc, &curv);
 		  qassert(rc == TCL_OK);
 		  qassert(curc >= 2);
-		  QString head_str = Tcl_GetString(curv[0]);
-		  string type_str = Tcl_GetString(curv[1]);
-		  int array_count = 1;
-		  if (curc >= 3)
-			rc = Tcl_GetIntFromObj(tcl_engine_, curv[2], &array_count);
 
 		  DataTable::column_t cur;
-		  cur.heading = head_str;
+		  cur.heading = Tcl_GetString(curv[0]);
+
+		  string type_str = Tcl_GetString(curv[1]);
 		  cur.type = DataTable::type_from_string(type_str);
-		  cur.array_count = array_count;
+
+		  cur.repeat = 1;
+		  cur.max_elements = 132;
+
 		  columns.push_back(cur);
 	    }
 
@@ -182,10 +182,15 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 
 	    DataTable::column_t info = table->table_col_info(col);
 	    long val_long;
+	    char*val_text;
 	    switch (info.type) {
 		case DataTable::DT_INT32:
 		  Tcl_GetLongFromObj(tcl_engine_, objv[5], &val_long);
 		  table->set_value_int32(row, col, val_long);
+		  break;
+		case DataTable::DT_STRING:
+		  val_text = Tcl_GetString(objv[5]);
+		  table->set_value_string(row, col, val_text);
 		  break;
 		default:
 		  Tcl_AppendResult(tcl_engine_, "Unsupported column type", 0);

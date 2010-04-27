@@ -404,19 +404,20 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
 	    ttype[idx] = strdup(cur.heading.toAscii().constData());
 	    switch (cur.type) {
 		case DT_CHAR:
-		  tform[idx] = "A";
+		  tform[idx] = strdup("A");
 		  break;
 		case DT_UINT8:
-		  tform[idx] = "B";
+		  tform[idx] = strdup("B");
 		  break;
 		case DT_INT16:
-		  tform[idx] = "I";
+		  tform[idx] = strdup("I");
 		  break;
 		case DT_INT32:
-		  tform[idx] = "J";
+		  tform[idx] = strdup("J");
 		  break;
 		case DT_STRING:
-		  tform[idx] = "PA";
+		  qassert(cur.max_elements > 0);
+		  tform[idx] = strdup(QString("PA(%1)").arg(cur.max_elements).toAscii().constData());
 		  break;
 		default:
 		  qinternal_error("Type code not implemented");
@@ -430,6 +431,7 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
 
       for (size_t idx = 0 ; idx < info.size() ; idx += 1) {
 	    free(ttype[idx]);
+	    free(tform[idx]);
       }
 
       return 0;
@@ -450,6 +452,32 @@ int WorkFolder::Table::set_value_int32(size_t row, size_t col, int32_t val)
       fits_write_col(fd_, TINT32BIT, col+1, row+1, 1, 1, &val, &status);
       if (status != 0) {
 	    show_fits_error_stack(QString("Error writing int32 at row=%1, col=%2").arg(row).arg(col));
+	    return -1;
+      }
+
+      return 0;
+}
+
+int WorkFolder::Table::set_value_string(size_t row, size_t col, const QString&val)
+{
+      if (fd_ == 0) return -1;
+      if (col >= table_cols()) return -1;
+
+	// The row number allows for extending the table by one row to
+	// accomodate a new value. So allow a row number below the
+	// last.  The fits_write_col function will automaticall extend
+	// the table if needed.
+      if (row > table_rows()) return -1;
+
+      char val_buf[512+1];
+      strncpy(val_buf, val.toLocal8Bit().constData(), sizeof val_buf);
+
+      int status = 0;
+      char*val_ptr[0];
+      val_ptr[0] = val_buf;
+      fits_write_col(fd_, TSTRING, col+1, row+1, 1, 1, val_ptr, &status);
+      if (status != 0) {
+	    show_fits_error_stack(QString("Error writing string at row=%1, col=%2").arg(row).arg(col));
 	    return -1;
       }
 
@@ -502,7 +530,7 @@ DataTable::column_t WorkFolder::Table::table_col_info(size_t col)
       qassert((size_t)colnum == col+1);
 
       res.heading = ttype;
-      res.array_count = repeat;
+      res.repeat = repeat;
       switch (typecode) {
 	  case TINT32BIT:
 	    res.type = DT_INT32;
@@ -557,10 +585,32 @@ int32_t WorkFolder::Table::table_value_int32(size_t row, size_t col)
       return val;
 }
 
-QString WorkFolder::Table::table_value_string(size_t, size_t)
+QString WorkFolder::Table::table_value_string(size_t row, size_t col)
 {
-      qinternal_error("not implemented");
-      return 0;
+      qassert(fd_ && col < table_cols() && row < table_rows());
+
+	// Strings are stored as variable-length arrays of ASCII. Get
+	// from the descriptor the size of this array, so that we can
+	// know how big a buffer is needed.
+      int status = 0;
+      long repeat = 0;
+      long offset = 0;
+      fits_read_descript(fd_, col+1, row+1, &repeat, &offset, &status);
+
+      char*val[1];
+      val[0] = new char[repeat+1];
+
+	// Read the value into the buffer, then convert it to a string.
+      fits_read_col(fd_, TSTRING, col+1, row+1, 1, 1, 0, val, 0, &status);
+      if (status != 0) {
+	    show_fits_error_stack(QString("Error reading string at row=%1, col=%2").arg(row).arg(col));
+      }
+
+      QString res = val[0];
+
+	// Clean up and return the result.
+      delete[]val[0];
+      return res;
 }
 
 QWidget* WorkFolder::Table::create_view_dialog(QWidget*dialog_parent)
