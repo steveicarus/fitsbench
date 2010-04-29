@@ -468,6 +468,7 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
 	    free(tform[idx]);
       }
 
+      preview_view_changed();
       return 0;
 }
 
@@ -489,6 +490,7 @@ int WorkFolder::Table::set_value_int32(size_t row, size_t col, int32_t val)
 	    return -1;
       }
 
+      preview_view_changed();
       return 0;
 }
 
@@ -507,7 +509,7 @@ int WorkFolder::Table::set_value_string(size_t row, size_t col, const QString&va
       strncpy(val_buf, val.toLocal8Bit().constData(), sizeof val_buf);
 
       int status = 0;
-      char*val_ptr[0];
+      char*val_ptr[1];
       val_ptr[0] = val_buf;
       fits_write_col(fd_, TSTRING, col+1, row+1, 1, 1, val_ptr, &status);
       if (status != 0) {
@@ -515,6 +517,7 @@ int WorkFolder::Table::set_value_string(size_t row, size_t col, const QString&va
 	    return -1;
       }
 
+      preview_view_changed();
       return 0;
 }
 

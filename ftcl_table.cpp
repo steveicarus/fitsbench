@@ -42,6 +42,8 @@ int FitsbenchMain::ftcl_table_thunk_(ClientData raw, Tcl_Interp*interp,
  */
 int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 {
+      int rc;
+
       if (objc < 3) {
 	    Tcl_AppendResult(tcl_engine_, "Usage", 0);
 	    return TCL_ERROR;
@@ -190,7 +192,11 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 		  break;
 		case DataTable::DT_STRING:
 		  val_text = Tcl_GetString(objv[5]);
-		  table->set_value_string(row, col, val_text);
+		  rc = table->set_value_string(row, col, val_text);
+		  if (rc < 0) {
+			Tcl_AppendResult(tcl_engine_, "Error setting string value", 0);
+			return TCL_ERROR;
+		  }
 		  break;
 		default:
 		  Tcl_AppendResult(tcl_engine_, "Unsupported column type", 0);

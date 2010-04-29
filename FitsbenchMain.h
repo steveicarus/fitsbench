@@ -37,6 +37,8 @@ class FitsbenchMain : public QMainWindow {
 	// The user interface...
       Ui::FitsbenchMainWidget ui;
 
+      void closeEvent(QCloseEvent*);
+
 	// For the TCL engine, keep a map of script names to
 	// scriptables. The user manipulates this map by setting or
 	// changing the "script name" for the bench item.

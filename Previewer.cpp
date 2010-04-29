@@ -57,3 +57,11 @@ void Previewer::render_into_dialog(QWidget*dialog_parent)
       if (view_ == 0) view_ = create_view_dialog(dialog_parent);
       if (view_ != 0) view_->show();
 }
+
+void Previewer::preview_view_changed(void)
+{
+      if (view_ != 0) {
+	    delete view_;
+	    view_ = 0;
+      }
+}

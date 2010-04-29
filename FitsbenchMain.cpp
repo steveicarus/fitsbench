@@ -20,6 +20,7 @@
 # include  <qapplication.h>
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
+# include  <QCloseEvent>
 # include  <QFileDialog>
 # include  <QInputDialog>
 # include  <QLineEdit>
@@ -94,6 +95,11 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
 FitsbenchMain::~FitsbenchMain()
 {
       Tcl_DeleteInterp(tcl_engine_);
+}
+
+void FitsbenchMain::closeEvent(QCloseEvent*event)
+{
+      event->accept();
 }
 
 void FitsbenchMain::set_bench_script_name_(FitsbenchItem*item, const QString&name)

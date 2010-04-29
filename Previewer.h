@@ -38,6 +38,12 @@ class Previewer {
       void render_into_dialog(QWidget*parent);
 
     protected:
+	// The derived class calls this to indicate that the contents
+	// of a view may have changed. The previewer must redraw the
+	// view if this happens.
+      void preview_view_changed();
+
+    protected:
 	// The derived class implements this to refill the info table.
       virtual void fill_in_info_table(QTableWidget*) =0;
 	// The derived class implements this to create a display dialog.
