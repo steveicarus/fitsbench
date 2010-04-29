@@ -179,8 +179,30 @@ int WorkFolder::Image::copy_from_array(DataArray*src)
 	  case DT_UINT8:
 	    bitpix = BYTE_IMG;
 	    break;
+	  case DT_INT8:
+	    bitpix = SBYTE_IMG;
+	    break;
 	  case DT_UINT16:
 	    bitpix = USHORT_IMG;
+	    break;
+	  case DT_INT16:
+	    bitpix = SHORT_IMG;
+	    break;
+	  case DT_UINT32:
+	    bitpix = ULONG_IMG;
+	    break;
+	  case DT_INT32:
+	    bitpix = LONG_IMG;
+	    break;
+	  case DT_INT64:
+	    bitpix = LONGLONG_IMG;
+	    break;
+	  case DT_FLOAT32:
+	    bitpix = FLOAT_IMG;
+	    break;
+	  case DT_FLOAT64:
+	  case DT_DOUBLE:
+	    bitpix = DOUBLE_IMG;
 	    break;
       }
       qassert(bitpix != 0);
@@ -200,6 +222,18 @@ int WorkFolder::Image::copy_from_array(DataArray*src)
       } else if (src_type == DT_UINT16) {
 	    uint16_t*buf = new uint16_t[axes[0]];
 	    rc = do_copy_lines_(src, buf, TUSHORT);
+
+      } else if (src_type == DT_INT16) {
+	    int16_t*buf = new int16_t[axes[0]];
+	    rc = do_copy_lines_(src, buf, TSHORT);
+
+      } else if (src_type == DT_UINT32) {
+	    uint32_t*buf = new uint32_t[axes[0]];
+	    rc = do_copy_lines_(src, buf, TULONG);
+
+      } else if (src_type == DT_INT16) {
+	    int32_t*buf = new int32_t[axes[0]];
+	    rc = do_copy_lines_(src, buf, TLONG);
 
       } else {
 	    qinternal_error("Source type not handled here.");
