@@ -60,6 +60,7 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
       if (cmd == "create") {
 
 	    WorkFolder::Table*table = new WorkFolder::Table(folder, name);
+	    folder->map_folder_item(name, table);
 
 	    if (objc <= 3)
 		  return TCL_OK;

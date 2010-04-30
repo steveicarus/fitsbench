@@ -22,13 +22,21 @@
 # include  <QTableWidget>
 # include  "SimpleImageView.h"
 # include  "SimpleTableView.h"
+# include  <iostream>
 # include  "qassert.h"
 
 using namespace std;
 
 WorkFolder::WorkFolder(const QString&name, const QDir&path)
-: BenchFile(name, path.path()), work_path_(path)
+: BenchFile(name, path.path()),
+  work_path_(path),
+  work_settings_(path.filePath("WorkFolder.ini"),QSettings::IniFormat)
 {
+	// If there is a persistent script name, then use that.
+      QString tmp = work_settings_.value("gui/script_name").toString();
+      if (! tmp.isEmpty())
+	    setScriptName(tmp);
+
       QStringList name_filters;
       name_filters << "*.fits";
       work_path_.setNameFilters(name_filters);
@@ -41,16 +49,18 @@ WorkFolder::WorkFolder(const QString&name, const QDir&path)
 
 	    if (name.endsWith("-i.fits")) {
 		  name.chop(7);
-		  image_map_[name] = new Image(this, name, item_path);
+		  map_folder_item(name, new Image(this, name, item_path));
 	    } else if (name.endsWith("-t.fits")) {
 		  name.chop(7);
-		  table_map_[name] = new Table(this, name, item_path);
+		  map_folder_item(name, new Table(this, name, item_path));
 	    }
       }
 }
 
 WorkFolder::~WorkFolder()
 {
+      work_settings_.setValue("gui/script_name", getScriptName());
+
 	// We do not have to delete the items in the child_map_
 	// because the are QTreeWidgetItems that are children of me as
 	// a QTreeWidgetItem; Qt as already deleted them for me.
@@ -62,6 +72,7 @@ WorkFolder::Image* WorkFolder::get_image(const QString&name)
 
       if (ptr == 0) {
 	    ptr = new Image(this, name);
+	    map_folder_item(name, ptr);
       }
 
       return ptr;
@@ -74,6 +85,25 @@ WorkFolder::Table* WorkFolder::find_table(const QString&name)
 	    return 0;
       else
 	    return cur->second;
+}
+
+void WorkFolder::map_folder_item(const QString&key, WorkFolder::WorkFits*item)
+{
+      qassert(item->parent() == this);
+
+      if (Table*cur = dynamic_cast<Table*> (item)) {
+	    qassert( table_map_[key] == 0 );
+	    table_map_[key] = cur;
+	    return;
+      }
+
+      if (Image*cur = dynamic_cast<Image*> (item)) {
+	    qassert( image_map_[key] == 0 );
+	    image_map_[key] = cur;
+	    return;
+      }
+
+      qinternal_error("Unexpected WorkFits type");
 }
 
 WorkFolder::WorkFits::WorkFits(WorkFolder*folder, const QString&name)
@@ -138,7 +168,7 @@ void WorkFolder::WorkFits::fill_in_info_table(QTableWidget*widget)
  * fits file with a single HDU that contains the data array.
  */
 WorkFolder::Image::Image(WorkFolder*folder, const QString&name)
-    : WorkFits(folder, name)
+: WorkFits(folder, name)
 {
 }
 
@@ -388,7 +418,7 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
 }
 
 WorkFolder::Table::Table(WorkFolder*folder, const QString&name)
-    : WorkFits(folder, name)
+: WorkFits(folder, name)
 {
 }
 

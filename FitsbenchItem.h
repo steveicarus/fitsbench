@@ -22,6 +22,7 @@
 # include  <qapplication.h>
 # include  <QDir>
 # include  <QFileInfo>
+# include  <QSettings>
 # include  <QTreeWidgetItem>
 # include  <map>
 # include  <vector>
@@ -319,6 +320,12 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
  * stored in the host file system as a directory. The items in the
  * collection are stored as files. We work with files in order to
  * avoid size constraints, and also to make the data persistent.
+ *
+ * The WorkFolder contains items derived from WorkFits. The latter
+ * represents the file inside, and also holds some of the common code
+ * for manipulating that file. When WorkFits files are create with a
+ * parent pointer, that parent is given responsibility for closing and
+ * deleting the object.
  */
 class WorkFolder  : public BenchFile {
 
@@ -405,8 +412,11 @@ class WorkFolder  : public BenchFile {
 	// Return the folder table by name, or null if it doesn't exist.
       Table* find_table(const QString&name);
 
+      void map_folder_item(const QString&key, WorkFits*that);
+
     private:
       QDir work_path_;
+      QSettings work_settings_;
       std::map<QString,Image*> image_map_;
       std::map<QString,Table*> table_map_;
 };
