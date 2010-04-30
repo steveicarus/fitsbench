@@ -27,5 +27,9 @@ int main(int argc, char*argv[])
       FitsbenchMain*widget = new FitsbenchMain;
       widget->show();
 
-      return app.exec();
+      int rc = app.exec();
+
+      delete widget;
+
+      return rc;
 }

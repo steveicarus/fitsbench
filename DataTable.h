@@ -21,7 +21,7 @@
 
 # include  <stdint.h>
 # include  <string>
-# include  <QString.h>
+# include  <QString>
 # include  <fitsio.h>
 
 /*
