@@ -17,47 +17,37 @@
  *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-# include  "Previewer.h"
-# include  <QString>
-# include  <QStackedWidget>
-# include  <QStringList>
-# include  <QTableWidget>
+# include  "ObjectAutoPtr.h"
 
-Previewer::Previewer()
+
+ObjectAutoPtr::ObjectAutoPtr()
 {
+      target_ = 0;
 }
 
-Previewer::~Previewer()
+ObjectAutoPtr::~ObjectAutoPtr()
 {
+      if (target_) delete target_;
 }
 
-void Previewer::preview_into_stack(QStackedWidget*widget)
+ObjectAutoPtr& ObjectAutoPtr::operator = (QWidget*tgt)
 {
-      if (table_.ptr() == 0) {
-	    QTableWidget*tmp = new QTableWidget(0, 3);
+      if (target_) delete target_;
+      target_ = tgt;
+      connect(target_, SIGNAL(destroyed(QObject*)), SLOT(target_destroyed(QObject*)));
+      return *this;
+}
 
-	    QStringList headers;
-	    headers << QString("Keyword") << QString("Value") << QString("Comments");
-	    tmp->setHorizontalHeaderLabels(headers);
-
-	    fill_in_info_table(tmp);
-
-	    widget->addWidget(tmp);
-	    table_ = tmp;
+void ObjectAutoPtr::destroy()
+{
+      if (target_) {
+	    QWidget*tmp = target_;
+	    target_ = 0;
+	    delete tmp;
       }
-
-      widget->setCurrentWidget(table_.ptr());
 }
 
-void Previewer::render_into_dialog(QWidget*dialog_parent)
+void ObjectAutoPtr::target_destroyed(QObject*obj)
 {
-      if (view_.ptr() == 0) {
-	    view_ = create_view_dialog(dialog_parent);
-      }
-      if (view_.ptr() != 0) view_.ptr()->show();
-}
-
-void Previewer::preview_view_changed(void)
-{
-      view_.destroy();
+      if (obj == target_) target_ = 0;
 }

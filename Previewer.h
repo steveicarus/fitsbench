@@ -19,6 +19,7 @@
  *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
+# include  "ObjectAutoPtr.h"
 class QStackedWidget;
 class QTableWidget;
 class QWidget;
@@ -28,7 +29,7 @@ class QWidget;
  * QStackedWidget by creating a widget that describes themselves,
  * adding that widget to the stack, and enabling the stack.
  */
-class Previewer {
+class Previewer  {
 
     public:
       Previewer();
@@ -50,8 +51,8 @@ class Previewer {
       virtual QWidget* create_view_dialog(QWidget*dialog_parent) =0;
 
     private:
-      QTableWidget*table_;
-      QWidget*view_;
+      ObjectAutoPtr table_;
+      ObjectAutoPtr view_;
 };
 
 #endif

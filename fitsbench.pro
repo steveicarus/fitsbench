@@ -15,8 +15,8 @@ unix {
 
 FORMS += fitsbench.ui
 
-HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h DataTable.h qassert.h
-SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp ScratchImage.cpp Previewer.cpp DataArray.cpp DataTable.cpp main.cpp
+HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h DataTable.h ObjectAutoPtr.h qassert.h
+SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp ScratchImage.cpp Previewer.cpp DataArray.cpp DataTable.cpp ObjectAutoPtr.cpp main.cpp
 
 SOURCES += PnmFile.cpp TiffFile.cpp WorkFolder.cpp
 
