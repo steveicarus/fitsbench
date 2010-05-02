@@ -390,7 +390,7 @@ QWidget* ScratchImage::create_view_uint8_(QWidget*dialog_parent, const uint8_t*a
 
 QWidget* ScratchImage::create_view_uint16_(QWidget*dialog_parent, const uint16_t*array)
 {
-      if (axes_.size() != 2)
+      if (axes_.size() != 2 && axes_.size() != 3)
 	    return 0;
 
       size_t pixel_count = get_pixel_count(axes_);
@@ -408,13 +408,39 @@ QWidget* ScratchImage::create_view_uint16_(QWidget*dialog_parent, const uint16_t
 
       QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
 
-      for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
-	    uint32_t val = array[idx] * 255 / max_val;
-	    if (val > 255) val = 255;
+      size_t pixel_area = axes_[0] * axes_[1];
+      for (size_t idx = 0 ; idx < pixel_area ; idx += 1) {
+	    uint32_t valr = array[idx] * 255 / max_val;
+	    if (valr > 255) valr = 255;
 
-	    int alpha = alpha_? alpha_[idx] : 0xff;
-	    image.setPixel(idx % axes_[0], idx / axes_[0],
-			   qRgba(val, val, val, alpha));
+	    int alphar = alpha_? alpha_[idx] : 0xff;
+	    if (axes_.size() == 2) {
+		  image.setPixel(idx % axes_[0], idx / axes_[0],
+				 qRgba(valr, valr, valr, alphar));
+	    } else {
+		  qassert(axes_[2] >= 3);
+		  uint32_t valg = array[1*pixel_area+idx] * 255 / max_val;
+		  if (valg > 255) valg = 255;
+
+		  int alphag = alpha_? alpha_[1*pixel_area+idx] : 0xff;
+
+		  uint32_t valb = array[2*pixel_area+idx] * 255 / max_val;
+		  if (valb > 255) valb = 255;
+
+		  int alphab = alpha_? alpha_[2*pixel_area+idx] : 0xff;
+
+		  int use_alpha;
+		  if (alphar==0 && alphag==0 && alphab==0) {
+			use_alpha = 0;
+		  } else {
+			use_alpha = 0xff;
+			if (alphar==0) valr = 0;
+			if (alphag==0) valg = 0;
+			if (alphab==0) valb = 0;
+		  }
+		  image.setPixel(idx % axes_[0], idx / axes_[0],
+				 qRgba(valr, valg, valb, use_alpha));
+	    }
       }
 
       return new SimpleImageView(dialog_parent, image, getDisplayName());

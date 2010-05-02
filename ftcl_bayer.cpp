@@ -35,7 +35,7 @@ int FitsbenchMain::ftcl_bayer_decomp_thunk_(ClientData raw, Tcl_Interp*interp,
 /*
  * Bayer-decompose a source image (2D) into a destination image.
  *
- *   bayer_decompose <dst-red> <dst-green> <dst-blue> <src>
+ *   bayer_decompose <dst>  <src>
  */
 int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 {
@@ -52,19 +52,7 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
       }
 
-      dst_item = item_from_name_(objv[2]);
-      if (dst_item) {
-	    Tcl_AppendResult(tcl_engine_, "Destination already exists.", 0);
-	    return TCL_ERROR;
-      }
-
-      dst_item = item_from_name_(objv[3]);
-      if (dst_item) {
-	    Tcl_AppendResult(tcl_engine_, "Destination already exists.", 0);
-	    return TCL_ERROR;
-      }
-
-      FitsbenchItem*src_item = item_from_name_(objv[4]);
+      FitsbenchItem*src_item = item_from_name_(objv[2]);
       DataArray*src = dynamic_cast<DataArray*> (src_item);
       if (src == 0) {
 	    Tcl_AppendResult(tcl_engine_, "Source is not a data array", 0);
@@ -87,24 +75,15 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
       }
 
-      vector<long> dst_axes (2);
+      vector<long> dst_axes (3);
       dst_axes[0] = src_axes[0];
       dst_axes[1] = src_axes[1];
+      dst_axes[2] = 3;
 
-      ScratchImage*dst_red = new ScratchImage("bayer red");
-      dst_red->reconfig(dst_axes, DataArray::DT_UINT16);
-      ui.bench_tree->addTopLevelItem(dst_red);
-      set_bench_script_name_(dst_red, Tcl_GetString(objv[1]));
-
-      ScratchImage*dst_grn = new ScratchImage("bayer green");
-      dst_grn->reconfig(dst_axes, DataArray::DT_UINT16);
-      ui.bench_tree->addTopLevelItem(dst_grn);
-      set_bench_script_name_(dst_grn, Tcl_GetString(objv[2]));
-
-      ScratchImage*dst_blu = new ScratchImage("bayer blue");
-      dst_blu->reconfig(dst_axes, DataArray::DT_UINT16);
-      ui.bench_tree->addTopLevelItem(dst_blu);
-      set_bench_script_name_(dst_blu, Tcl_GetString(objv[3]));
+      ScratchImage*dst = new ScratchImage("bayer RGB");
+      dst->reconfig(dst_axes, DataArray::DT_UINT16);
+      ui.bench_tree->addTopLevelItem(dst);
+      set_bench_script_name_(dst, Tcl_GetString(objv[1]));
 
       uint16_t*src0 = new uint16_t[dst_axes[0]];
       uint16_t*dst0 = new uint16_t[dst_axes[0]];
@@ -121,13 +100,14 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 	//      R G
 
       vector<long> src_addr(2);
-      vector<long> dst_addr(2);
+      vector<long> dst_addr(3);
       src_addr[0] = 0;
       dst_addr[0] = 0;
       for (int ydx = 0 ; ydx < dst_axes[1] ; ydx += 1) {
 	    int rc;
 	    int has_alpha = 0;
 	    src_addr[1] = ydx;
+	    dst_addr[1] = ydx;
 	    rc = src->get_line(src_addr, dst_axes[0], src0, has_alpha);
 	    qassert(rc >= 0);
 	    qassert(has_alpha == 0);
@@ -170,14 +150,16 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 		  }
 	    }
 
-	    dst_addr[1] = ydx;
-	    dst_red->set_line(dst_addr, dst_axes[0], dst0);
-	    dst_grn->set_line(dst_addr, dst_axes[0], dst1);
-	    dst_blu->set_line(dst_addr, dst_axes[0], dst2);
 
-	    dst_red->set_line_alpha(dst_addr, dst_axes[0], alp0);
-	    dst_grn->set_line_alpha(dst_addr, dst_axes[0], alp1);
-	    dst_blu->set_line_alpha(dst_addr, dst_axes[0], alp2);
+	    dst_addr[2] = 0;
+	    dst->set_line(dst_addr, dst_axes[0], dst0);
+	    dst->set_line_alpha(dst_addr, dst_axes[0], alp0);
+	    dst_addr[2] = 1;
+	    dst->set_line(dst_addr, dst_axes[0], dst1);
+	    dst->set_line_alpha(dst_addr, dst_axes[0], alp1);
+	    dst_addr[2] = 2;
+	    dst->set_line(dst_addr, dst_axes[0], dst2);
+	    dst->set_line_alpha(dst_addr, dst_axes[0], alp2);
       }
 
       delete[]dst0;
