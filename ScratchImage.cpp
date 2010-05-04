@@ -71,7 +71,7 @@ void ScratchImage::delete_by_type_(void)
 }
 
 	    
-void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
+bool ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
 {
       delete_by_type_();
       axes_ = axes;
@@ -95,6 +95,8 @@ void ScratchImage::reconfig(const vector<long>&axes, DataArray::type_t type)
 	    assert(0);
 	    break;
       }
+
+      return true;
 }
 
 std::vector<long> ScratchImage::get_axes(void) const
@@ -180,12 +182,16 @@ template <class T> int ScratchImage::do_set_line_(size_t off, long wid, const T*
 }
 
 int ScratchImage::set_line_raw(const std::vector<long>&addr, long wid,
-			       DataArray::type_t type, const void*data)
+			       DataArray::type_t type, const void*data,
+			       const uint8_t*alpha)
 {
       qassert(addr.size() == axes_.size());
       qassert(type == type_);
 
       size_t off = addr_to_offset_(addr);
+
+      if (alpha)
+	    set_line_alpha_(addr, wid, alpha);
 
       switch (type) {
 	  case DT_DOUBLE:
@@ -203,7 +209,7 @@ int ScratchImage::set_line_raw(const std::vector<long>&addr, long wid,
       }
 }
 
-int ScratchImage::set_line_alpha(const std::vector<long>&addr, long wid, const uint8_t*data)
+int ScratchImage::set_line_alpha_(const std::vector<long>&addr, long wid, const uint8_t*data)
 {
       if (alpha_ == 0) {
 	    size_t pixel_count = get_pixel_count(axes_);

@@ -54,3 +54,15 @@
       } while(0)
 
 #endif
+
+# define qassert_fits_status(expr) \
+      do {  if ((expr) != 0) {					\
+	    QString text = QString("Function %1...\n%2:%3")		\
+		  .arg(__PRETTY_FUNCTION__)				\
+		  .arg(__FILE__)					\
+		  .arg(__LINE__);					\
+	    show_fits_error_stack(text);				\
+	    QMessageBox::StandardButton btn;				\
+	    btn = QMessageBox::warning(0, "Assertion Failed", text, QMessageBox::Abort|QMessageBox::Ignore, QMessageBox::Abort); \
+	    if (btn == QMessageBox::Abort) abort();			\
+	    } } while (0)

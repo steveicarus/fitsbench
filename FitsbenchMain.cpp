@@ -113,7 +113,7 @@ void FitsbenchMain::set_bench_script_name_(FitsbenchItem*item, const QString&nam
 	    script_names_.erase(tmp);
       }
 
-      if (! name.isNull() && ! name.isEmpty()) {
+      if (! name.isEmpty()) {
 	    std::string name_str = name.toStdString();
 
 	    if (FitsbenchItem*old_item = script_names_[name_str])
@@ -140,7 +140,6 @@ void FitsbenchMain::action_OpenImage_slot_(void)
       QString filter (tr("FITS Data files (*.fit *.fits *.fts)"
 			 ";;PNM Images (*.pgm *.ppm)"
 			 ";;TIFF Images (*.tif *.tiff)"
-			 ";;FITSBench Work Folders (*.fbw)"
 			 ";;Any (*.pgm *.ppm *.tif *.tiff *.fit *.fits *.fts)"));
 
       QStringList files = QFileDialog::getOpenFileNames(this, tr("Select image files to open."),
@@ -180,6 +179,10 @@ void FitsbenchMain::action_OpenFITSBench_Work_Folder_slot_(void)
 
       WorkFolder*item = new WorkFolder(path.dirName(), path);
       ui.bench_tree->addTopLevelItem(item);
+
+      QString script_name = item->getScriptName();
+      if (! script_name.isEmpty())
+	    set_bench_script_name_(item, script_name);
 }
 
 void FitsbenchMain::action_FITS_File_slot_(void)

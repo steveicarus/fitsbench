@@ -165,10 +165,8 @@ WorkFolder::Image* FitsbenchMain::workitem_from_name_(Tcl_Obj*obj) const
       return folder->get_image(name);
 }
 
-WorkFolder* FitsbenchMain::workfolder_from_name_(Tcl_Obj*obj, QString&nam) const
+WorkFolder* FitsbenchMain::workfolder_from_name_(const QString&path, QString&nam) const
 {
-      QString path = Tcl_GetString(obj);
-
       if (path.count('/') != 1)
 	    return 0;
 
@@ -186,6 +184,45 @@ WorkFolder* FitsbenchMain::workfolder_from_name_(Tcl_Obj*obj, QString&nam) const
       if (folder == 0) return 0;
 
       return folder;
+}
+
+WorkFolder* FitsbenchMain::workfolder_from_name_(Tcl_Obj*obj, QString&nam) const
+{
+      QString path = Tcl_GetString(obj);
+      return workfolder_from_name_(path, nam);
+}
+
+DataArray* FitsbenchMain::image_from_name_(const string&nam)
+{
+      size_t slash_index = nam.find('/');
+
+	// If there are no slach ('/') characters in the name, then
+	// find/create a top level item.
+      if (slash_index == string::npos) {
+	      // If the item already exists, return that.
+	    FitsbenchItem*item = item_from_name_(nam);
+	    if (item)
+		  return dynamic_cast<DataArray*> (item);
+
+	      // Otherwise, create a ScratchImage.
+	    ScratchImage*dst = new ScratchImage(QString(nam.c_str()));
+	    ui.bench_tree->addTopLevelItem(dst);
+	    set_bench_script_name_(dst, QString(nam.c_str()));
+	    return dst;
+      }
+
+      QString folder_file;
+      WorkFolder*folder = workfolder_from_name_(nam.c_str(), folder_file);
+      if (folder == 0)
+	    return 0;
+
+      return folder->get_image(folder_file);
+}
+
+DataArray* FitsbenchMain::image_from_name_(Tcl_Obj*obj)
+{
+      string nam = Tcl_GetString(obj);
+      return image_from_name_(nam);
 }
 
 vector<long> FitsbenchMain::vector_from_listobj_(Tcl_Obj*obj)

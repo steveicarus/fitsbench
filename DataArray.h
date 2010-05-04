@@ -59,18 +59,26 @@ class DataArray {
       DataArray() { }
       virtual ~DataArray() =0;
 
+	// For classes that support it, this method sets the shape of
+	// the image. This should return false for read-only images,
+	// and it should return false if the type/dimensions can't be
+	// set on the particular instance.
+      virtual bool reconfig(const std::vector<long>&axes, DataArray::type_t type);
+
       virtual std::vector<long> get_axes(void) const;
       virtual type_t get_type(void) const { return DT_VOID; }
 
       template <class T>
-      int set_line(const std::vector<long>&addr, long wid, const T*data);
+      int set_line(const std::vector<long>&addr, long wid, const T*data,
+		   const uint8_t*alpha =0);
 
       template <class T>
       int get_line(const std::vector<long>&addr, long wid, T*data,
 		   int&has_alpha, uint8_t*alpha =0);
 
       virtual int set_line_raw(const std::vector<long>&addr, long wid,
-			       type_t type, const void*data);
+			       type_t type, const void*data,
+			       const uint8_t*alpha =0);
 
       virtual int get_line_raw(const std::vector<long>&addr, long wid,
 			       type_t type, void*data,
@@ -92,29 +100,29 @@ class DataArray {
       static std::vector<long> add(const std::vector<long>&a, const std::vector<long>&b);
 };
 
-template <> inline int DataArray::set_line<int8_t>(const std::vector<long>&addr, long wid, const int8_t*data)
-{ return set_line_raw(addr, wid, DT_INT8, data); }
-template <> inline int DataArray::set_line<int16_t>(const std::vector<long>&addr, long wid, const int16_t*data)
-{ return set_line_raw(addr, wid, DT_INT16, data); }
-template <> inline int DataArray::set_line<int32_t>(const std::vector<long>&addr, long wid, const int32_t*data)
-{ return set_line_raw(addr, wid, DT_INT32, data); }
-template <> inline int DataArray::set_line<int64_t>(const std::vector<long>&addr, long wid, const int64_t*data)
-{ return set_line_raw(addr, wid, DT_INT64, data); }
+template <> inline int DataArray::set_line<int8_t>(const std::vector<long>&addr, long wid, const int8_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_INT8, data, alpha); }
+template <> inline int DataArray::set_line<int16_t>(const std::vector<long>&addr, long wid, const int16_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_INT16, data, alpha); }
+template <> inline int DataArray::set_line<int32_t>(const std::vector<long>&addr, long wid, const int32_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_INT32, data, alpha); }
+template <> inline int DataArray::set_line<int64_t>(const std::vector<long>&addr, long wid, const int64_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_INT64, data, alpha); }
 
-template <> inline int DataArray::set_line<uint8_t>(const std::vector<long>&addr, long wid, const uint8_t*data)
-{ return set_line_raw(addr, wid, DT_UINT8, data); }
-template <> inline int DataArray::set_line<uint16_t>(const std::vector<long>&addr, long wid, const uint16_t*data)
-{ return set_line_raw(addr, wid, DT_UINT16, data); }
-template <> inline int DataArray::set_line<uint32_t>(const std::vector<long>&addr, long wid, const uint32_t*data)
-{ return set_line_raw(addr, wid, DT_UINT32, data); }
-template <> inline int DataArray::set_line<uint64_t>(const std::vector<long>&addr, long wid, const uint64_t*data)
-{ return set_line_raw(addr, wid, DT_UINT64, data); }
+template <> inline int DataArray::set_line<uint8_t>(const std::vector<long>&addr, long wid, const uint8_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_UINT8, data, alpha); }
+template <> inline int DataArray::set_line<uint16_t>(const std::vector<long>&addr, long wid, const uint16_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_UINT16, data, alpha); }
+template <> inline int DataArray::set_line<uint32_t>(const std::vector<long>&addr, long wid, const uint32_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_UINT32, data, alpha); }
+template <> inline int DataArray::set_line<uint64_t>(const std::vector<long>&addr, long wid, const uint64_t*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_UINT64, data, alpha); }
 
-template <> inline int DataArray::set_line<double>(const std::vector<long>&addr, long wid, const double*data)
-{ return set_line_raw(addr, wid, DT_DOUBLE, data); }
+template <> inline int DataArray::set_line<double>(const std::vector<long>&addr, long wid, const double*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_DOUBLE, data, alpha); }
 
-template <> inline int DataArray::set_line< std::complex<double> >(const std::vector<long>&addr, long wid, const std::complex<double>*data)
-{ return set_line_raw(addr, wid, DT_COMPLEX, data); }
+template <> inline int DataArray::set_line< std::complex<double> >(const std::vector<long>&addr, long wid, const std::complex<double>*data, const uint8_t*alpha)
+{ return set_line_raw(addr, wid, DT_COMPLEX, data, alpha); }
 
 template <> inline int DataArray::get_line<int8_t>(const std::vector<long>&addr, long wid, int8_t*data, int&has_alpha, uint8_t*alpha)
 { return get_line_raw(addr, wid, DT_INT8, data, has_alpha, alpha); }

@@ -75,15 +75,21 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
       }
 
+      DataArray*dst = image_from_name_(objv[1]);
+      if (dst == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Unable to create destination image ", Tcl_GetString(objv[1]), 0);
+	    return TCL_ERROR;
+      }
+
       vector<long> dst_axes (3);
       dst_axes[0] = src_axes[0];
       dst_axes[1] = src_axes[1];
       dst_axes[2] = 3;
 
-      ScratchImage*dst = new ScratchImage("bayer RGB");
-      dst->reconfig(dst_axes, DataArray::DT_UINT16);
-      ui.bench_tree->addTopLevelItem(dst);
-      set_bench_script_name_(dst, Tcl_GetString(objv[1]));
+      if ( ! dst->reconfig(dst_axes, DataArray::DT_UINT16) ) {
+	    Tcl_AppendResult(tcl_engine_, "Destination image has incompatible type.", 0);
+	    return TCL_ERROR;
+      }
 
       uint16_t*src0 = new uint16_t[dst_axes[0]];
       uint16_t*dst0 = new uint16_t[dst_axes[0]];
@@ -152,14 +158,11 @@ int FitsbenchMain::ftcl_bayer_decompose_(int objc, Tcl_Obj*const objv[])
 
 
 	    dst_addr[2] = 0;
-	    dst->set_line(dst_addr, dst_axes[0], dst0);
-	    dst->set_line_alpha(dst_addr, dst_axes[0], alp0);
+	    dst->set_line(dst_addr, dst_axes[0], dst0, alp0);
 	    dst_addr[2] = 1;
-	    dst->set_line(dst_addr, dst_axes[0], dst1);
-	    dst->set_line_alpha(dst_addr, dst_axes[0], alp1);
+	    dst->set_line(dst_addr, dst_axes[0], dst1, alp1);
 	    dst_addr[2] = 2;
-	    dst->set_line(dst_addr, dst_axes[0], dst2);
-	    dst->set_line_alpha(dst_addr, dst_axes[0], alp2);
+	    dst->set_line(dst_addr, dst_axes[0], dst2, alp2);
       }
 
       delete[]dst0;

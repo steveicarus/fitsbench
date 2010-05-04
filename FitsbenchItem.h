@@ -268,16 +268,15 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
       ScratchImage (const QString&display_name);
       ~ScratchImage();
 
-      void reconfig(const std::vector<long>&axes, DataArray::type_t type);
-
     public: // Implementations for DataArray
       std::vector<long> get_axes(void) const;
       DataArray::type_t get_type(void) const;
 
-      int set_line_raw(const std::vector<long>&addr, long wid,
-		       DataArray::type_t type, const void*data);
+      bool reconfig(const std::vector<long>&axes, DataArray::type_t type);
 
-      int set_line_alpha(const std::vector<long>&addr, long wid, const uint8_t*data);
+      int set_line_raw(const std::vector<long>&addr, long wid,
+		       DataArray::type_t type, const void*data,
+		       const uint8_t*alpha =0);
 
       virtual int get_line_raw(const std::vector<long>&addr, long wid,
 			       type_t type, void*data,
@@ -286,6 +285,8 @@ class ScratchImage  : public FitsbenchItem, public Previewer, public DataArray {
     private:
       template <class T> int do_set_line_(size_t off, long wid, const T*data);
       template <class T> int do_get_line_(size_t off, long wid, T*data);
+
+      int set_line_alpha_(const std::vector<long>&addr, long wid, const uint8_t*data);
 
     protected: // Implementations for Previewer
       void fill_in_info_table(QTableWidget*);
@@ -355,11 +356,23 @@ class WorkFolder  : public BenchFile {
 
 	    int copy_from_array(DataArray*src);
 
+	  public: // Implementations for DataArray
+	    std::vector<long> get_axes(void) const;
+	    DataArray::type_t get_type(void) const;
+
+	    bool reconfig(const std::vector<long>&axes, DataArray::type_t type);
+
+	    int set_line_raw(const std::vector<long>&addr, long wid,
+			     DataArray::type_t type, const void*data,
+			     const uint8_t*alpha =0);
+
 	  protected: // Implementations of Previewer virtual methods.
 	    QWidget* create_view_dialog(QWidget*dialog_parent);
 
 	  private:
 	    template<class T>int do_copy_lines_(DataArray*src, T*buf, int datatype);
+
+	    template<class T>int do_set_line_alpha_(std::vector<long>&axes, long wid, T*buf, int datatype, T blank_val, const void*data, const uint8_t*alpha);
 
 	      // Render the image of the current HDU into the QImage. If it
 	      // is a 2D image, then render it as a grayscale image. If it

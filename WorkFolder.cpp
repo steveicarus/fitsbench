@@ -68,7 +68,7 @@ WorkFolder::~WorkFolder()
 
 WorkFolder::Image* WorkFolder::get_image(const QString&name)
 {
-      Image*&ptr = image_map_[name];
+      Image*ptr = image_map_[name];
 
       if (ptr == 0) {
 	    ptr = new Image(this, name);
@@ -180,66 +180,13 @@ WorkFolder::Image::Image(WorkFolder*folder, const QString&name, const QFileInfo&
 WorkFolder::Image::~Image()
 {
 }
-
 int WorkFolder::Image::copy_from_array(DataArray*src)
 {
-      int status = 0;
-      if (fd_ != 0) {
-	    return -1;
-      }
-
-      QFileInfo img_path (folder()->work_dir(), getDisplayName() + "-i.fits");
-      qassert(! img_path.exists());
-
-      QString path_str = img_path.filePath();
-      fits_create_diskfile(&fd_, path_str.toLocal8Bit().constData(), &status);
-      if (status != 0) {
-	    show_fits_error_stack(path_str);
-	    return -1;
-      }
-
-      qassert(fd_);
-
       DataArray::type_t src_type = src->get_type();
-
-      int bitpix = 0;
-      switch (src_type) {
-	  case DT_VOID:
-	    break;
-	  case DT_UINT8:
-	    bitpix = BYTE_IMG;
-	    break;
-	  case DT_INT8:
-	    bitpix = SBYTE_IMG;
-	    break;
-	  case DT_UINT16:
-	    bitpix = USHORT_IMG;
-	    break;
-	  case DT_INT16:
-	    bitpix = SHORT_IMG;
-	    break;
-	  case DT_UINT32:
-	    bitpix = ULONG_IMG;
-	    break;
-	  case DT_INT32:
-	    bitpix = LONG_IMG;
-	    break;
-	  case DT_INT64:
-	    bitpix = LONGLONG_IMG;
-	    break;
-	  case DT_FLOAT32:
-	    bitpix = FLOAT_IMG;
-	    break;
-	  case DT_FLOAT64:
-	  case DT_DOUBLE:
-	    bitpix = DOUBLE_IMG;
-	    break;
-      }
-      qassert(bitpix != 0);
-
       vector<long> axes = src->get_axes();
 
-      fits_create_img(fd_, bitpix, axes.size(), &axes[0], &status);
+      bool rc_bool = reconfig(axes, src_type);
+      qassert(rc_bool);
 
       int rc;
       if (src_type == DT_VOID) {
@@ -273,6 +220,156 @@ int WorkFolder::Image::copy_from_array(DataArray*src)
       return rc;
 }
 
+vector<long> WorkFolder::Image::get_axes(void) const
+{
+      if (fd_ == 0)
+	    return vector<long>();
+
+      int status = 0;
+      int naxis = 0;
+
+      fits_get_img_dim(fd_, &naxis, &status);
+
+      vector<long>res (naxis);
+      fits_get_img_size(fd_, naxis, &res[0], &status);
+
+      return res;
+}
+
+DataArray::type_t WorkFolder::Image::get_type(void) const
+{
+      int status = 0;
+      int bitpix = 0;
+      fits_get_img_equivtype(fd_, &bitpix, &status);
+
+      switch (bitpix) {
+	  case BYTE_IMG: return DT_UINT8;
+	  case SBYTE_IMG: return DT_INT8;
+	  case SHORT_IMG: return DT_INT16;
+	  case USHORT_IMG: return DT_UINT16;
+	  case LONG_IMG: return DT_INT32;
+	  case ULONG_IMG: return DT_UINT32;
+	  case LONGLONG_IMG: return DT_INT64;
+	  case FLOAT_IMG: return DT_FLOAT32;
+	  case DOUBLE_IMG: return DT_FLOAT64;
+	  default: return DT_VOID;
+      }
+}
+
+bool WorkFolder::Image::reconfig(const std::vector<long>&axes, DataArray::type_t type)
+{
+	// Can only reconfig new Image items
+      if (fd_ != 0)
+	    return false;
+
+      int status = 0;
+
+      QFileInfo img_path (folder()->work_dir(), getDisplayName() + "-i.fits");
+      qassert(! img_path.exists());
+
+      QString path_str = img_path.filePath();
+      fits_create_diskfile(&fd_, path_str.toLocal8Bit().constData(), &status);
+      if (status != 0) {
+	    show_fits_error_stack(path_str);
+	    return -1;
+      }
+
+      qassert(fd_);
+
+      int bitpix = 0;
+      switch (type) {
+	  case DT_VOID:
+	    break;
+	  case DT_UINT8:
+	    bitpix = BYTE_IMG;
+	    break;
+	  case DT_INT8:
+	    bitpix = SBYTE_IMG;
+	    break;
+	  case DT_UINT16:
+	    bitpix = USHORT_IMG;
+	    break;
+	  case DT_INT16:
+	    bitpix = SHORT_IMG;
+	    break;
+	  case DT_UINT32:
+	    bitpix = ULONG_IMG;
+	    break;
+	  case DT_INT32:
+	    bitpix = LONG_IMG;
+	    break;
+	  case DT_INT64:
+	    bitpix = LONGLONG_IMG;
+	    break;
+	  case DT_FLOAT32:
+	    bitpix = FLOAT_IMG;
+	    break;
+	  case DT_FLOAT64:
+	  case DT_DOUBLE:
+	    bitpix = DOUBLE_IMG;
+	    break;
+      }
+      qassert(bitpix != 0);
+
+      vector<long>axes_tmp = axes;
+      fits_create_img(fd_, bitpix, axes.size(), &axes_tmp[0], &status);
+
+      return true;
+}
+
+int WorkFolder::Image::set_line_raw(const std::vector<long>&addr, long wid,
+				    DataArray::type_t type, const void*data,
+				    const uint8_t*alpha)
+{
+      qassert(get_type() == type);
+
+      int status = 0;
+
+	// Make sure the axes counts are correct. (cfitsio will not
+	// check this, and instead will gleefully run past the end of
+	// the fpixel array...)
+      int naxes = 0;
+      fits_get_img_dim(fd_, &naxes, &status);
+      qassert(naxes==(int)addr.size());
+
+      int datatype = 0;
+      switch (type) {
+	  case DataArray::DT_UINT16:
+	    datatype = TUSHORT;
+	    break;
+	  default:
+	    qinternal_error("Source type not handled here");
+	    break;
+      }
+
+      vector<long> addr_tmp = addr;
+      for (size_t idx = 0 ; idx < addr_tmp.size() ; idx += 1)
+	    addr_tmp[idx] += 1;
+
+      if (alpha == 0) {
+	    fits_write_pix(fd_, datatype, &addr_tmp[0], wid, (void*)data, &status);
+	    qassert(status == 0);
+	    if (status != 0) {
+		  show_fits_error_stack("WorkFolder::Image::set_line_raw");
+	    }
+	    return 0;
+      }
+
+      if (type == DT_UINT16) {
+	    uint16_t*buf = new uint16_t[wid];
+	    int16_t fits_blank = 0x7fff;
+	    uint16_t use_blank = 0xffff;
+	    int status = 0;
+	    fits_update_key(fd_, TSHORT, "BLANK", &fits_blank, 0, &status);
+	    fits_set_imgnull(fd_, fits_blank, &status);
+	    qassert_fits_status(status);
+	    return do_set_line_alpha_(addr_tmp, wid, buf, TUSHORT, use_blank, data, alpha);
+      }
+
+      qinternal_error("WorkFits::Image::set_line_raw not implemented");
+      return -1;
+}
+
 template<class T>int WorkFolder::Image::do_copy_lines_(DataArray*src,
 						       T*buf, int datatype)
 {
@@ -301,6 +398,25 @@ template<class T>int WorkFolder::Image::do_copy_lines_(DataArray*src,
       }
 
       fits_flush_file(fd_, &status);
+      return 0;
+}
+
+template<class T>int WorkFolder::Image::do_set_line_alpha_(std::vector<long>&axes, long wid, T*buf, int datatype, T blank_val, const void*data, const uint8_t*alpha)
+{
+      const T*use_data = reinterpret_cast<const T*> (data);
+      for (long idx = 0 ; idx < wid ; idx += 1) {
+	    if (alpha[idx] == 0)
+		  buf[idx] = blank_val;
+	    else
+		  buf[idx] = use_data[idx];
+      }
+
+      int status = 0;
+      fits_write_pixnull(fd_, datatype, &axes[0], wid, buf, &blank_val, &status);
+      qassert_fits_status(status);
+
+      delete[]buf;
+
       return 0;
 }
 
@@ -363,6 +479,11 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
 	    fpixel[idx] = 1;
 
       if (bitpix == BYTE_IMG) {
+	    vector<uint8_t> blank_color (3);
+	    blank_color[0] = 0x1;
+	    blank_color[1] = 0x1;
+	    blank_color[2] = 0x1;
+
 	    unsigned char*rrow = new unsigned char [naxes[0]];
 	    unsigned char*grow = new unsigned char [naxes[0]];
 	    unsigned char*brow = new unsigned char [naxes[0]];
@@ -370,13 +491,13 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
 		  fpixel[1] = ydx+1;
 		  fpixel[2] = ridx;
 		  int anynul = 0;
-		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, rrow, &anynul, &status);
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], &blank_color[0], rrow, &anynul, &status);
 		  fpixel[2] = gidx;
 		  anynul = 0;
-		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, grow, &anynul, &status);
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], &blank_color[1], grow, &anynul, &status);
 		  fpixel[2] = bidx;
 		  anynul = 0;
-		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], 0, brow, &anynul, &status);
+		  fits_read_pix(fd_, TBYTE, fpixel, naxes[0], &blank_color[2], brow, &anynul, &status);
 		  for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
 			image.setPixel(xdx, ydx, qRgba(rrow[xdx], grow[xdx], brow[xdx], 0xff));
 		  }
@@ -385,6 +506,11 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
 	    delete[]grow;
 	    delete[]brow;
       } else if (bitpix == USHORT_IMG) {
+	    vector<unsigned short> blank_color (3);
+	    blank_color[0] = 0x1;
+	    blank_color[1] = 0x1;
+	    blank_color[2] = 0x1;
+
 	    unsigned short*rrow = new unsigned short [naxes[0]];
 	    unsigned short*grow = new unsigned short [naxes[0]];
 	    unsigned short*brow = new unsigned short [naxes[0]];
@@ -392,13 +518,13 @@ void WorkFolder::Image::render_chdu_(QImage&image, int ridx, int gidx, int bidx,
 		  fpixel[1] = ydx+1;
 		  fpixel[2] = ridx;
 		  int anynul = 0;
-		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, rrow, &anynul, &status);
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], &blank_color[0], rrow, &anynul, &status);
 		  fpixel[2] = gidx;
 		  anynul = 0;
-		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, grow, &anynul, &status);
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], &blank_color[1], grow, &anynul, &status);
 		  fpixel[2] = bidx;
 		  anynul = 0;
-		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], 0, brow, &anynul, &status);
+		  fits_read_pix(fd_, TUSHORT, fpixel, naxes[0], &blank_color[2], brow, &anynul, &status);
 		  for (int xdx = 0 ; xdx < naxes[0] ; xdx += 1) {
 			image.setPixel(xdx, ydx, qRgba(qBound(0,rrow[xdx]>>8,255),
 						       qBound(0,grow[xdx]>>8,255),

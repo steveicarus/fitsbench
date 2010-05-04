@@ -26,6 +26,11 @@ DataArray::~DataArray()
 {
 }
 
+bool DataArray::reconfig(const std::vector<long>&, DataArray::type_t)
+{
+      return false;
+}
+
 std::vector<long> DataArray::get_axes(void) const
 {
       return std::vector<long> ();
@@ -36,7 +41,7 @@ int DataArray::get_line_raw(const std::vector<long>&, long, type_t, void*, int&,
       return -1;
 }
 
-int DataArray::set_line_raw(const std::vector<long>&, long, type_t, const void*)
+int DataArray::set_line_raw(const std::vector<long>&, long, type_t, const void*, const uint8_t*)
 {
       return -1;
 }

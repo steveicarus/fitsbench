@@ -53,10 +53,20 @@ class FitsbenchMain : public QMainWindow {
       FitsbenchItem* item_from_name_(const std::string&nam) const;
       FitsbenchItem* item_from_name_(Tcl_Obj*obj) const;
 
+	// Locate or create a DataArray with the given script name. If
+	// the name is a work/path string, then create the image in
+	// the WorkFolder. Otherwise, create a ScratchImage with the
+	// same name.
+      DataArray* image_from_name_(const std::string&nam);
+      DataArray* image_from_name_(Tcl_Obj*obj);
+
+	// Similar to above, but in this case the image *must* be of
+	// the form work/file.
       WorkFolder::Image* workitem_from_name_(Tcl_Obj*obj) const;
 
 	// Convenience function for getting the existing folder for
 	// the name. The name part is returned to the nam argument.
+      WorkFolder* workfolder_from_name_(const QString&path, QString&nam) const;
       WorkFolder* workfolder_from_name_(Tcl_Obj*obj, QString&nam) const;
 
     private:
