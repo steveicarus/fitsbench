@@ -15,10 +15,10 @@ unix {
 
 FORMS += fitsbench.ui
 
-HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h DataTable.h ObjectAutoPtr.h qassert.h
-SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp FitsFile.cpp ScratchImage.cpp Previewer.cpp DataArray.cpp DataTable.cpp ObjectAutoPtr.cpp main.cpp
+HEADERS += FitsbenchMain.h FitsbenchItem.h Previewer.h DataArray.h DataTable.h ObjectAutoPtr.h fits_helpers.h qassert.h
+SOURCES += FitsbenchMain.cpp FitsbenchItem.cpp Previewer.cpp DataArray.cpp DataTable.cpp ObjectAutoPtr.cpp fits_helpers.cpp main.cpp
 
-SOURCES += PnmFile.cpp TiffFile.cpp WorkFolder.cpp
+SOURCES += FitsFile.cpp PnmFile.cpp TiffFile.cpp ScratchImage.cpp WorkFolder.cpp
 
 FORMS += simple.ui
 HEADERS += SimpleImageView.h

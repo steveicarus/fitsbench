@@ -374,15 +374,6 @@ class WorkFolder  : public BenchFile {
 
 	    template<class T>int do_set_line_alpha_(std::vector<long>&axes, long wid, T*buf, int datatype, T blank_val, const void*data, const uint8_t*alpha);
 
-	      // Render the image of the current HDU into the QImage. If it
-	      // is a 2D image, then render it as a grayscale image. If it
-	      // is 3D, then the red, green and blue integers are indexes
-	      // into the third dimension to select planes for an RGB
-	      // rendering. Use FITS conventions for plane numberings,
-	      // i.e. the first plane is 1, the second 2, etc.
-	      // The status is the cfitsio status.
-	    void render_chdu_(QImage&image, int red, int green, int blu, int&status);
-
       };
 
       class Table : public WorkFits, public DataTable {
@@ -433,7 +424,5 @@ class WorkFolder  : public BenchFile {
       std::map<QString,Image*> image_map_;
       std::map<QString,Table*> table_map_;
 };
-
-extern void show_fits_error_stack(const QString&str);
 
 #endif
