@@ -145,10 +145,24 @@ int FitsbenchMain::tcl_stdout_getHandleProc_(int, ClientData*handlePtr)
 
 FitsbenchItem* FitsbenchMain::item_from_name_(const string&name) const
 {
-      map<string,FitsbenchItem*>::const_iterator cur = script_names_.find(name);
+      size_t slash_index = name.find('/');
 
-      if (cur == script_names_.end()) return 0;
-      else return cur->second;
+	// If there are no slash ('/') charscters in the name, then
+	// find a top level item.
+      if (slash_index == string::npos) {
+
+	    map<string,FitsbenchItem*>::const_iterator cur = script_names_.find(name);
+
+	    if (cur == script_names_.end()) return 0;
+	    else return cur->second;
+      }
+
+      QString folder_file;
+      WorkFolder*folder = workfolder_from_name_(name.c_str(), folder_file);
+      if (folder == 0)
+	    return 0;
+
+      return folder->find_item(folder_file);
 }
 
 FitsbenchItem* FitsbenchMain::item_from_name_(Tcl_Obj*obj) const

@@ -79,13 +79,32 @@ WorkFolder::Image* WorkFolder::get_image(const QString&name)
       return ptr;
 }
 
-WorkFolder::Table* WorkFolder::find_table(const QString&name)
+WorkFolder::Table* WorkFolder::find_table(const QString&name) const
 {
-      map<QString,Table*>::iterator cur = table_map_.find(name);
+      map<QString,Table*>::const_iterator cur = table_map_.find(name);
       if (cur == table_map_.end())
 	    return 0;
       else
 	    return cur->second;
+}
+
+WorkFolder::Image* WorkFolder::find_image(const QString&name) const
+{
+      map<QString,Image*>::const_iterator cur = image_map_.find(name);
+      if (cur == image_map_.end())
+	    return 0;
+      else
+	    return cur->second;
+}
+
+FitsbenchItem* WorkFolder::find_item(const QString&name) const
+{
+      if (FitsbenchItem*cur = find_image(name))
+	    return cur;
+      if (FitsbenchItem*cur = find_table(name))
+	    return cur;
+
+      return 0;
 }
 
 void WorkFolder::map_folder_item(const QString&key, WorkFolder::WorkFits*item)
@@ -369,6 +388,52 @@ int WorkFolder::Image::set_line_raw(const std::vector<long>&addr, long wid,
 
       qinternal_error("WorkFits::Image::set_line_raw not implemented");
       return -1;
+}
+
+int WorkFolder::Image::get_line_raw(const std::vector<long>&addr, long wid,
+				    type_t type, void*data,
+				    int&has_alpha, uint8_t*alpha)
+{
+      int rc = 0;
+      vector<long> axes = get_axes();
+      qassert(axes.size() == addr.size());
+
+      vector<long>fpixel (addr.size());
+      for (size_t idx = 0 ; idx < addr.size() ; idx += 1)
+	    fpixel[idx] = addr[idx] + 1;
+
+      int status = 0;
+      int anynul = 0;
+      vector<char> nulmask (wid);
+
+      switch (type) {
+	  case DataArray::DT_UINT8:
+	    fits_read_pixnull(fd_, TBYTE, &fpixel[0], wid,
+			      data, &nulmask[0], &anynul, &status);
+	    break;
+	  case DataArray::DT_UINT16:
+	    fits_read_pixnull(fd_, TUSHORT, &fpixel[0], wid,
+			      data, &nulmask[0], &anynul, &status);
+	    break;
+
+	  default:
+	    QMessageBox::warning(0, "WorkFolder::Image::get_line_raw",
+				 "Unsupported data type?");
+	    rc = -1;
+	    break;
+      }
+
+      if (anynul) {
+	    for (int idx = 0 ; idx < wid ; idx += 1) {
+		  if (alpha) alpha[idx] = nulmask[idx]? 0x00 : 0xff;
+		  if (nulmask[idx]) has_alpha += 1;
+	    }
+      } else {
+	    if (alpha) memset(alpha, 0xff, wid);
+	    has_alpha = 0;
+      }
+
+      return rc;
 }
 
 template<class T>int WorkFolder::Image::do_copy_lines_(DataArray*src,

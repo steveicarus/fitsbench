@@ -36,14 +36,13 @@ template <class T> void do_crop(ScratchImage*dst, DataArray*src,
 {
       vector<long>dst_axes = dst->get_axes();
       vector<long>dst_addr = DataArray::zero_addr(dst_axes.size());
-
+      vector<uint8_t>alpha (dst_axes[0]);
       do {
 	    int has_alpha = 0;
 	    vector<long> src_addr = DataArray::add(src_point, dst_addr);
-	    int rc = src->get_line(src_addr, dst_axes[0], data, has_alpha, 0);
+	    int rc = src->get_line(src_addr, dst_axes[0], data, has_alpha, &alpha[0]);
 	    qassert(rc >= 0);
-	    qassert(has_alpha == 0);
-	    dst->set_line(dst_addr, dst_axes[0], data);
+	    dst->set_line(dst_addr, dst_axes[0], data, &alpha[0]);
       } while (DataArray::incr(dst_addr, dst_axes, 1));
 }
 
@@ -68,6 +67,11 @@ int FitsbenchMain::ftcl_crop_(int objc, Tcl_Obj*const objv[])
       vector<long> dst_axes = vector_from_listobj_(objv[2]);
 
       FitsbenchItem*src_item = item_from_name_(objv[3]);
+      if (src_item == 0) {
+	    Tcl_AppendResult(tcl_engine_, "Unable to find source ", Tcl_GetString(objv[3]), ".", 0);
+	    return TCL_ERROR;
+      }
+
       DataArray*src = dynamic_cast<DataArray*> (src_item);
       if (src == 0) {
 	    Tcl_AppendResult(tcl_engine_, "Source is not a data array", 0);

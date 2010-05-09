@@ -366,6 +366,10 @@ class WorkFolder  : public BenchFile {
 			     DataArray::type_t type, const void*data,
 			     const uint8_t*alpha =0);
 
+	    int get_line_raw(const std::vector<long>&addr, long wid,
+			     type_t type, void*data,
+			     int&has_alpha, uint8_t*alpha);
+
 	  protected: // Implementations of Previewer virtual methods.
 	    QWidget* create_view_dialog(QWidget*dialog_parent);
 
@@ -410,11 +414,16 @@ class WorkFolder  : public BenchFile {
       const QDir&work_dir() const { return work_path_; }
 
 	// Return the folder image by name. If the item doesn't exist,
-	// create it.
+	// create it. The "find_image" method will return null if the
+	// image doesn't exist.
       Image* get_image(const QString&name);
+      Image* find_image(const QString&name) const;
 
 	// Return the folder table by name, or null if it doesn't exist.
-      Table* find_table(const QString&name);
+      Table* find_table(const QString&name) const;
+
+	// Return the folder item by name, or null if it doesn't exist.
+      FitsbenchItem* find_item(const QString&name) const;
 
       void map_folder_item(const QString&key, WorkFits*that);
 
