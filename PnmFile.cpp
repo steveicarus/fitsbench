@@ -334,8 +334,8 @@ void PnmFile::render_rgb8_(QImage&image)
       for (size_t ydx = 0 ; ydx < hei_ ; ydx += 1) {
 	    size_t cnt = fread(buf, 1, 3*wid_, fd_);
 	    qassert(cnt == 3*wid_);
-	    for (size_t xdx = 0 ; xdx < 3*wid_ ; xdx += 3) {
-		  image.setPixel(xdx, ydx, qRgba(buf[xdx+0],buf[xdx+1],buf[xdx+2],0xff));
+	    for (size_t xdx = 0 ; xdx < wid_ ; xdx += 1) {
+		  image.setPixel(xdx, ydx, qRgba(buf[3*xdx+0],buf[3*xdx+1],buf[3*xdx+2],0xff));
 	    }
       }
 
