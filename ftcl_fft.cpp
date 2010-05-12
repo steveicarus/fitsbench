@@ -34,23 +34,22 @@ int FitsbenchMain::ftcl_phase_corr_thunk_(ClientData raw, Tcl_Interp*interp,
 
 template<class src_t> static void do_get_complex_array(const std::vector<long>&axes, fftw_complex*dst, DataArray*src)
 {
-      src_t*src_buf = new src_t[axes[0]];
+      vector<src_t>   src_buf(axes[0]);
+      vector<uint8_t> alpha_buf (axes[0]);
 
       vector<long> src_ptr = DataArray::zero_addr(axes.size());
       do {
 	    int has_alpha = 0;
-	    int rc = src->get_line(src_ptr, axes[0], src_buf, has_alpha);
+	    int rc = src->get_line(src_ptr, axes[0], &src_buf[0],
+				   has_alpha, &alpha_buf[0]);
 	    qassert(rc >= 0);
-	    qassert(has_alpha == 0);
 	    for (long idx = 0 ; idx < axes[0] ; idx += 1) {
-		  dst[0][0] = src_buf[idx];
+		  dst[0][0] = alpha_buf[idx]? src_buf[idx] : 0.0;
 		  dst[0][1] = 0.0;
 		  dst += 1;
 	    }
 
       } while (DataArray::incr(src_ptr, axes, 1));
-
-      delete[]src_buf;
 }
 
 static void get_complex_array(const std::vector<long>& axes, fftw_complex*dst, DataArray*src)
@@ -77,6 +76,12 @@ static void get_complex_array(const std::vector<long>& axes, fftw_complex*dst, D
 
 int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 {
+      if (objc != 4) {
+	    Tcl_AppendResult(tcl_engine_, "Usage: phase_correlated "
+			     "<dst> <src1> <src2>", 0);
+	    return TCL_ERROR;
+      }
+
       assert(objc == 4);
 
       const char*dst_name = Tcl_GetString(objv[1]);
@@ -225,6 +230,14 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       fftw_free(src1_array);
       fftw_free(src2_array);
       fftw_free(dst_array);
+
+	// The resulting offset position assumes the image wraps, and
+	// will give a positive result. But we would rather return a
+	// small negative value.
+      for (size_t idx = 0 ; idx < max_ptr.size() ; idx += 1) {
+	    if (max_ptr[idx] > src1_axes[idx]/2)
+		  max_ptr[idx] -= src1_axes[idx];
+      }
 
       Tcl_Obj*addr_obj = listobj_from_vector_(max_ptr);
       Tcl_SetObjResult(tcl_engine_, addr_obj);
