@@ -61,12 +61,34 @@ Scan an image to find the minimum and maximum pixel values. The result
 is a list of 4 items: The minimum value, the address of the minimum,
 the maximum value, and its address.
 
-* phase_correlate <dest> <src1> <src2>
+* phase_correlate <dest> <dst-axes> <src1> <point1> <src2> <point2>
 
-Do a phase correlation of the <src1> and <src2> images, and put the
-resulting image into <dest>. The <src1> and <src2> images must have
-the same type and dimensions. The <dest> image will have the same
-dimensions but a type of native double.
+Do a phase correlation of portions of <src1> and <src2> images, and
+put the resulting image into <dest>.
+
+The destination array will have the data type native double and the
+dimensions given by the list <dst-axes>. For example:
+
+     phase_correlate dst {3900 2613} ...
+
+will create a 2D destination array.
+
+The <src1> and <src2> images must have the same type, and at least as
+many axes as the destination array. For example, if the destination
+array is 2D, then the source image must have at least 2 axes. The
+<point1> and <point2> lists give the starting corner where the data
+will be pulled from the <src1> and <src2> arrays. The dimensions of
+the image to be cropped will come from the size of the destination
+array. For example:
+
+     phase_correlate dst {3900 2613} src1 {0 0 1} src2 {0 0 1}
+
+will use the second plane of 3D source arrays as input to the 2D phase
+correlation.
+
+This function will create the destination image, but will also output
+the coordinates in the destination of the peak, which corresponds to
+the relative shift of the two source images.
 
 * pixbin <dst> <src> <bin-list>
 
