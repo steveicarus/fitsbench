@@ -95,16 +95,14 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 
 	// Detect an axes list argument that defines the axes of the
 	// destination array.
-      const char*tmp = Tcl_GetString(objv[2]);
-      if (strcmp(tmp, "-") != 0)
-	    dst_axes = vector_from_listobj_(objv[2]);
+      dst_axes = vector_from_listobj_(objv[2]);
 
       const char*src1_name = Tcl_GetString(objv[3]);
       if (src1_name == 0)
 	    return TCL_ERROR;
 
 	// Detect an optional source point
-      tmp = Tcl_GetString(objv[4]);
+      const char*tmp = Tcl_GetString(objv[4]);
       if (strcmp(tmp, "-") != 0) 
 	    src1_pnt = vector_from_listobj_(objv[4]);
 
@@ -118,6 +116,11 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    src2_pnt = vector_from_listobj_(objv[6]);
 
       FitsbenchItem* dst_item = item_from_name_(dst_name);
+      if (dst_item != 0) {
+	    Tcl_AppendResult(tcl_engine_, "Image", dst_name, " already exists", 0);
+	    return TCL_ERROR;
+      }
+
 
       FitsbenchItem* src1_item = item_from_name_(src1_name);
       if (src1_item == 0) {
@@ -130,8 +133,6 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    Tcl_AppendResult(tcl_engine_, "Image ", src2_name, " not found.", 0);
 	    return TCL_ERROR;
       }
-
-      DataArray*dst = dynamic_cast<DataArray*>(dst_item);
 
       DataArray*src1 = dynamic_cast<DataArray*>(src1_item);
       if (src1 == 0) {
@@ -148,38 +149,68 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       vector<long> src1_axes = src1->get_axes();
       vector<long> src2_axes = src2->get_axes();
 
-	// If the destination image exists, make sure it is a
-	// DataArray, and get the dimensions from the array. We will
-	// use those dimensions for the target. If the destination
-	// does not exist, then create it using the dimensions that
-	// the user specified.
-      qassert(dst || !dst_item);
-
-      if (dst) {
-	    qassert(dst_axes.size() == 0);
-	    dst_axes = dst->get_axes();
-      } else {
-	    qassert(dst_axes.size() != 0);
-	    QString dst_disp = QString("phase_correlate(%1, %2)") .arg(src1_name) .arg(src2_name);
-	    ScratchImage*item = new ScratchImage(dst_disp);
-	    ui.bench_tree->addTopLevelItem(item);
-	    set_bench_script_name_(item, dst_name);
-
-	    item->reconfig(dst_axes, DataArray::DT_DOUBLE);
-
-	    dst_item = item;
-	    dst = item;
+      if (dst_axes.size()==0) {
+	    Tcl_AppendResult(tcl_engine_, "Destination dimensions unspecified.", 0);
+	    return TCL_ERROR;
       }
 
-      qassert(dst_axes == dst->get_axes());
+	// Create the destination item as a scratch image.
+      qassert(dst_axes.size() != 0);
+      QString dst_disp = QString("phase_correlate(%1, %2)") .arg(src1_name) .arg(src2_name);
+      ScratchImage*dst_scr = new ScratchImage(dst_disp);
+      ui.bench_tree->addTopLevelItem(dst_scr);
+      set_bench_script_name_(dst_scr, dst_name);
 
-	// Make sure the destination array fits within the source array.
-      qassert(dst_axes.size() <= src1_axes.size());
-      qassert(dst_axes.size() <= src2_axes.size());
+      dst_scr->reconfig(dst_axes, DataArray::DT_DOUBLE);
+
+      dst_item = dst_scr;
+      DataArray*dst = dst_scr;
+
+	// If the source point is not otherwise specified, use the
+	// upper left corner.
+      if (src1_pnt.size() == 0)
+	    src1_pnt = DataArray::zero_addr(src1_axes.size());
+      if (src2_pnt.size() == 0)
+	    src2_pnt = DataArray::zero_addr(src2_axes.size());
+
+      if (dst_axes.size() > src1_axes.size()) {
+	    Tcl_AppendResult(tcl_engine_, "Source array ", src1_name,
+			     " has too few axes.", 0);
+	    return TCL_ERROR;
+      }
+
+	// Check that all the arguments to the command make sense, and
+	// generate error messages if needed.
+
+      if (dst_axes.size() > src2_axes.size()) {
+	    Tcl_AppendResult(tcl_engine_, "Source array ", src2_name,
+			     " has too few axes.", 0);
+	    return TCL_ERROR;
+      }
+
+      if (src1_pnt.size() != src1_axes.size()) {
+	    Tcl_AppendResult(tcl_engine_, "Start point for ", src1_name,
+			     " has wrong number of dimensions.", 0);
+	    return TCL_ERROR;
+      }
+
+      if (src2_pnt.size() != src2_axes.size()) {
+	    Tcl_AppendResult(tcl_engine_, "Start point for ", src2_name,
+			     " has wrong number of dimensions.", 0);
+	    return TCL_ERROR;
+      }
+
       for (size_t idx = 0 ; idx < dst_axes.size() ; idx += 1) {
-	      // XXXX This is too restrictive!
-	    qassert(dst_axes[idx] = src1_axes[idx]);
-	    qassert(dst_axes[idx] = src2_axes[idx]);
+	    if (src1_pnt[idx] + dst_axes[idx] > src1_axes[idx]) {
+		  Tcl_AppendResult(tcl_engine_, "Destination array does not fit "
+				   "into source ",  src1_name, ".", 0);
+		  return TCL_ERROR;
+	    }
+	    if (src2_pnt[idx] + dst_axes[idx] > src2_axes[idx]) {
+		  Tcl_AppendResult(tcl_engine_, "Destination array does not fit "
+				   "into source ",  src2_name, ".", 0);
+		  return TCL_ERROR;
+	    }
       }
 
 	// The pixel_count is the size of the destination array. This
@@ -188,32 +219,16 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 
       fftw_complex*src1_array = (fftw_complex*)fftw_malloc(dst_pixel_count * sizeof(fftw_complex));
       fftw_complex*src2_array = (fftw_complex*)fftw_malloc(dst_pixel_count * sizeof(fftw_complex));
-      fftw_complex*dst_array  = (fftw_complex*)fftw_malloc(dst_pixel_count * sizeof(fftw_complex));
 
       qassert(src1_array);
       qassert(src2_array);
-      qassert(dst_array);
 
       fftw_plan plan1 = fftw_plan_dft_1d(dst_pixel_count, src1_array, src1_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);
       fftw_plan plan2 = fftw_plan_dft_1d(dst_pixel_count, src2_array, src2_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);
-      fftw_plan pland = fftw_plan_dft_1d(dst_pixel_count, dst_array, dst_array,
+      fftw_plan pland = fftw_plan_dft_1d(dst_pixel_count, src1_array, src1_array,
 					 FFTW_BACKWARD, FFTW_ESTIMATE);
-
-      if (src1_pnt.size() == 0)
-	    src1_pnt = DataArray::zero_addr(src1_axes.size());
-      if (src2_pnt.size() == 0)
-	    src2_pnt = DataArray::zero_addr(src2_axes.size());
-
-	// The get_data_array method assumes that the starting point
-	// in the source array is 0..0 for the dimensions of the
-	// source array. This allows the src array to have more
-	// dimensions and those dimensions to be non-zero.
-      for (size_t idx = 0 ; idx < dst_axes.size() ; idx += 1) {
-	    qassert(src1_pnt[idx] == 0);
-	    qassert(src2_pnt[idx] == 0);
-      }
 
       get_complex_array(dst_axes, src1_array, src1, src1_pnt);
       get_complex_array(dst_axes, src2_array, src2, src2_pnt);
@@ -224,7 +239,6 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       for (size_t idx = 0 ; idx < dst_pixel_count ; idx += 1) {
 	    fftw_complex*cur1 = src1_array + idx;
 	    fftw_complex*cur2 = src2_array + idx;
-	    fftw_complex*curd = dst_array  + idx;
 
 	      // Taking the complex conjugate here defines the
 	      // corresponding image as the reference image.
@@ -235,12 +249,15 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    res[1] = (cur1[0][0] * cur2[0][1]) + (cur1[0][1] * cur2[0][0]);
 
 	    double mag = sqrt( pow(res[0],2.0) + pow(res[1],2.0) );
-	    curd[0][0] = res[0] / mag;
-	    curd[0][1] = res[1] / mag;
+	    cur1[0][0] = res[0] / mag;
+	    cur1[0][1] = res[1] / mag;
       }
 
-
       fftw_execute(pland);
+
+      fftw_destroy_plan(plan1);
+      fftw_destroy_plan(plan2);
+      fftw_free(src2_array);
 
       double*res_buf = new double[dst_axes[0]];
 
@@ -248,9 +265,9 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	// the now degenerate imaginary part. While we are at it, look
 	// for the maximum value. This will be our correlation result.
       vector<long> addr = DataArray::zero_addr(dst_axes.size());
-      fftw_complex*ptr = dst_array;
+      fftw_complex*ptr = src1_array;
       vector<long> max_ptr = addr;
-      double max_val = dst_array[0][0];
+      double max_val = src1_array[0][0];
       do {
 	    for (long idx = 0 ; idx < dst_axes[0] ; idx += 1) {
 		  res_buf[idx] = ptr[idx][0];
@@ -266,13 +283,8 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 
       delete[]res_buf;
 
-      fftw_destroy_plan(plan1);
-      fftw_destroy_plan(plan2);
       fftw_destroy_plan(pland);
-
       fftw_free(src1_array);
-      fftw_free(src2_array);
-      fftw_free(dst_array);
 
 	// The resulting offset position assumes the image wraps, and
 	// will give a positive result. But we would rather return a
