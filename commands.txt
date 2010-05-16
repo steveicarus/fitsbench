@@ -27,6 +27,13 @@ function expects is with the dcraw command, like so:
 This will produce a file "foo.tiff" that is a 16bit TIFF file. Load that
 and use it as a source for the bayer_decompose function.
 
+* bench close <name>...
+
+Close the named items. The items may be images work work folders, but
+must be top loevel items. Closing will close an open file or work
+folder, or delete a scratch image. Any number of item names can be
+included on the command line, and all will be closed.
+
 * bench names
 
 Get a list of the bench tree items that have script names.

@@ -267,14 +267,6 @@ Tcl_Obj* FitsbenchMain::listobj_from_vector_(const vector<long>&axes)
       return obj;
 }
 
-int FitsbenchMain::ftcl_bench_thunk_(ClientData raw, Tcl_Interp*interp,
-				     int objc, Tcl_Obj*CONST objv[])
-{
-      FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
-      assert(eng->tcl_engine_ == interp);
-      return eng->ftcl_bench_(objc, objv);
-}
-
 int FitsbenchMain::ftcl_axes_thunk_(ClientData raw, Tcl_Interp*interp,
 				    int objc, Tcl_Obj*CONST objv[])
 {
@@ -297,47 +289,6 @@ int FitsbenchMain::ftcl_scratch_thunk_(ClientData raw, Tcl_Interp*interp,
       FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
       assert(eng->tcl_engine_ == interp);
       return eng->ftcl_scratch_(objc, objv);
-}
-
-int FitsbenchMain::ftcl_bench_(int objc, Tcl_Obj*const objv[])
-{
-      if (objc < 2) {
-	    Tcl_AppendResult(tcl_engine_, "Missing subcommand.", 0);
-	    return TCL_ERROR;
-      }
-
-      const char*subcmd = Tcl_GetString(objv[1]);
-      if (subcmd == 0)
-	    return TCL_ERROR;
-
-	// The "names" subcommand returns a list of the bench names
-	// that are available.
-      if (strcmp(subcmd, "names") == 0) {
-	    Tcl_ResetResult(tcl_engine_);
-	    for (map<string,FitsbenchItem*>::iterator cur = script_names_.begin()
-		       ; cur != script_names_.end() ; cur ++) {
-		  Tcl_AppendElement(tcl_engine_, cur->first.c_str());
-	    }
-	    return TCL_OK;
-      }
-
-      if (strcmp(subcmd, "display_text") == 0) {
-	    Tcl_ResetResult(tcl_engine_);
-	    for (int idx = 2 ; idx < objc ; idx += 1) {
-		  FitsbenchItem* item = item_from_name_(objv[idx]);
-
-		  if (item) {
-			string text = item->getDisplayName().toStdString();
-			Tcl_AppendElement(tcl_engine_, text.c_str());
-		  } else {
-			Tcl_AppendElement(tcl_engine_, string("").c_str());
-		  }
-	    }
-	    return TCL_OK;
-      }
-
-      Tcl_AppendResult(tcl_engine_, "Invalid subcommand: ", subcmd, 0);
-      return TCL_ERROR;
 }
 
 int FitsbenchMain::ftcl_axes_(int objc, Tcl_Obj*const objv[])
