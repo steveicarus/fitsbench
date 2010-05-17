@@ -118,3 +118,30 @@ std::vector<long> DataArray::add(const std::vector<long>&a, const std::vector<lo
 
       return out;
 }
+
+pixel_iterator::pixel_iterator(const std::vector<long>&ul, const std::vector<long>&lr)
+: ul_(ul), lr_(lr)
+{
+      assert(ul_.size() == lr_.size());
+      addr_ = ul_;
+}
+
+pixel_iterator::~pixel_iterator()
+{
+}
+
+bool pixel_iterator::incr(size_t axis, long step)
+{
+      size_t cur = axis;
+      while (cur < addr_.size()) {
+	    addr_[cur] += step;
+	    if (addr_[cur] < lr_[cur])
+		  return true;
+
+	    addr_[cur] = ul_[cur];
+	    cur += 1;
+      }
+
+      addr_.clear();
+      return false;
+}

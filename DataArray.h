@@ -145,4 +145,21 @@ template <> inline int DataArray::get_line<uint64_t>(const std::vector<long>&add
 template <> inline int DataArray::get_line<double>(const std::vector<long>&addr, long wid, double*data, int&has_alpha, uint8_t*alpha)
 { return get_line_raw(addr, wid, DT_DOUBLE, data, has_alpha, alpha); }
 
+
+class pixel_iterator {
+
+    public:
+      pixel_iterator(const std::vector<long>&ul, const std::vector<long>&lr);
+      ~pixel_iterator();
+
+      void rewind() { addr_ = ul_; }
+      const std::vector<long>& value() const { return addr_; }
+      bool valid() const { return addr_.size() != 0; }
+
+      bool incr(size_t axis, long step =1);
+
+    private:
+      std::vector<long> ul_, addr_, lr_;
+};
+
 #endif

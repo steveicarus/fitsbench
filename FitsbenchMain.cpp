@@ -39,9 +39,11 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "copy",            &FitsbenchMain::ftcl_copy_thunk_ },
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
+      { "normalize",       &FitsbenchMain::ftcl_normalize_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },
       { "pixbin",          &FitsbenchMain::ftcl_pixbin_thunk_ },
       { "scratch",         &FitsbenchMain::ftcl_scratch_thunk_ },
+      { "stack",           &FitsbenchMain::ftcl_stack_thunk_ },
       { "table",           &FitsbenchMain::ftcl_table_thunk_ },
       { 0, 0}
 };

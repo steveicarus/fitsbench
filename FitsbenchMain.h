@@ -102,8 +102,10 @@ class FitsbenchMain : public QMainWindow {
       int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_normalize_(int objc, Tcl_Obj*const objv[]);
       int ftcl_phase_corr_(int objc, Tcl_Obj*const objv[]);
       int ftcl_pixbin_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_stack_(int objc, Tcl_Obj*const objv[]);
       int ftcl_table_(int objc, Tcl_Obj*const objv[]);
 
 	// Stubs to convert the Tcl interpreter's call to the command
@@ -122,10 +124,14 @@ class FitsbenchMain : public QMainWindow {
 				     int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_minmax_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_normalize_thunk_(ClientData obj, Tcl_Interp*interp,
+				       int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_phase_corr_thunk_(ClientData obj, Tcl_Interp*interp,
 					int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_pixbin_thunk_(ClientData obj, Tcl_Interp*interp,
 				    int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_stack_thunk_(ClientData obj, Tcl_Interp*interp,
+				   int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_table_thunk_(ClientData obj, Tcl_Interp*interp,
 				   int objc, Tcl_Obj*CONST objv[]);
       static const struct ftcl_command_table {

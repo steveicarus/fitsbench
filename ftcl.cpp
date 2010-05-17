@@ -438,7 +438,12 @@ int FitsbenchMain::ftcl_scratch_(int objc, Tcl_Obj*const objv[])
 	      // The format of the "new" subcommand is:
 	      //   scratch new <name> <display-name> <type> <axes-list>
 
-	    assert(objc >= 6);
+	    if (objc < 6) {
+		  Tcl_AppendResult(tcl_engine_, "Usage: "
+				   "scratch new <name> <display> <type> <axes>", 0);
+		  return TCL_ERROR;
+	    }
+	    qassert(objc >= 6);
 
 	    QString name = Tcl_GetString(objv[2]);
 	    QString disp_name = Tcl_GetString(objv[3]);
