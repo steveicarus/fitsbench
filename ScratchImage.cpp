@@ -334,10 +334,13 @@ QWidget* ScratchImage::create_view_dialog(QWidget*dialog_parent)
 	    return create_view_double_(dialog_parent, array);
 
       if (const uint8_t*array = get_array_<uint8_t>())
-	    return create_view_uint8_(dialog_parent, array);
+	    return create_view_(dialog_parent, array);
 
       if (const uint16_t*array = get_array_<uint16_t>())
-	    return create_view_uint16_(dialog_parent, array);
+	    return create_view_(dialog_parent, array);
+
+      if (const uint32_t*array = get_array_<uint32_t>())
+	    return create_view_(dialog_parent, array);
 
       QString text = QString ("I don't know how to render this kind of scratch image");
       QMessageBox::warning(0, "ScratchImage render error", text);
@@ -374,27 +377,7 @@ QWidget* ScratchImage::create_view_double_(QWidget*dialog_parent, const double*a
       return new SimpleImageView(dialog_parent, image, getDisplayName());
 }
 
-QWidget* ScratchImage::create_view_uint8_(QWidget*dialog_parent, const uint8_t*array)
-{
-      if (axes_.size() != 2)
-	    return 0;
-
-      size_t pixel_count = get_pixel_count(axes_);
-
-      QImage image (axes_[0], axes_[1], QImage::Format_ARGB32);
-
-      for (size_t idx = 0 ; idx < pixel_count ; idx += 1) {
-	    int val = array[idx];
-	    if (val > 255) val = 255;
-	    if (val < 0)   val = 0;
-
-	    image.setPixel(idx % axes_[0], idx / axes_[0], qRgba(val, val, val, 0xff));
-      }
-
-      return new SimpleImageView(dialog_parent, image, getDisplayName());
-}
-
-QWidget* ScratchImage::create_view_uint16_(QWidget*dialog_parent, const uint16_t*array)
+template <class T> QWidget* ScratchImage::create_view_(QWidget*dialog_parent, const T*array)
 {
       if (axes_.size() != 2 && axes_.size() != 3)
 	    return 0;
