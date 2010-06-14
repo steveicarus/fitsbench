@@ -267,6 +267,18 @@ Tcl_Obj* FitsbenchMain::listobj_from_vector_(const vector<long>&axes)
       return obj;
 }
 
+Tcl_Obj* FitsbenchMain::listobj_from_vector_(const vector<double>&axes)
+{
+      Tcl_Obj*obj = Tcl_NewListObj(0, 0);
+
+      for (size_t idx = 0 ; idx < axes.size() ; idx += 1) {
+	    Tcl_Obj*cur = Tcl_NewDoubleObj(axes[idx]);
+	    Tcl_ListObjAppendElement(tcl_engine_, obj, cur);
+      }
+
+      return obj;
+}
+
 int FitsbenchMain::ftcl_axes_thunk_(ClientData raw, Tcl_Interp*interp,
 				    int objc, Tcl_Obj*CONST objv[])
 {

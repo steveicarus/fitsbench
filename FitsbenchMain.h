@@ -76,6 +76,7 @@ class FitsbenchMain : public QMainWindow {
 
       std::vector<long> vector_from_listobj_(Tcl_Obj*obj);
       Tcl_Obj* listobj_from_vector_(const std::vector<long>&axes);
+      Tcl_Obj* listobj_from_vector_(const std::vector<double>&axes);
 
       static Tcl_ChannelType tcl_stdout_type_;
       char tcl_stdout_linebuf_[2048];

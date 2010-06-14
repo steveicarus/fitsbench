@@ -32,26 +32,76 @@ int FitsbenchMain::ftcl_phase_corr_thunk_(ClientData raw, Tcl_Interp*interp,
       return eng->ftcl_phase_corr_(objc, objv);
 }
 
+/*
+ * Convert the input array to a complex array. The source may have any
+ * dimensionality, this will create an array with matching
+ * dimensionality. The exception is the interpolation that is
+ * done for undefined pixels. This is ONLY 2D.
+ */
 template<class src_t> static void do_get_complex_array(const std::vector<long>&axes, fftw_complex*dst, DataArray*src, const std::vector<long>&src_pnt)
 {
       vector<src_t>   src_buf   (axes[0]);
+      vector<src_t>   src_up    (axes[0]);
+      vector<src_t>   src_down  (axes[0]);
       vector<uint8_t> alpha_buf (axes[0]);
+      vector<uint8_t> alpha_up  (axes[0]);
+      vector<uint8_t> alpha_down(axes[0]);
 
       size_t count = DataArray::get_pixel_count(axes);
       vector<long> src_ptr = src_pnt;
       vector<long> src_ref = src->get_axes();
 
+      int has_alpha = 0;
+      int rc = src->get_line(src_ptr, axes[0], &src_buf[0],
+			     has_alpha, &alpha_buf[0]);
+      DataArray::incr(src_ptr, src_ref, 1);
       for (size_t count_idx = 0 ; count_idx < count ; count_idx += axes[0]) {
-	    int has_alpha = 0;
-	    int rc = src->get_line(src_ptr, axes[0], &src_buf[0],
-				   has_alpha, &alpha_buf[0]);
+
+	    if (count_idx+1 < count) {
+		  rc = src->get_line(src_ptr, axes[0], &src_down[0],
+				     has_alpha, &alpha_down[0]);
+	    }
 	    qassert(rc >= 0);
 	    for (long idx = 0 ; idx < axes[0] ; idx += 1) {
-		  dst[0][0] = alpha_buf[idx]? src_buf[idx] : 0.0;
+		  if (alpha_buf[idx]) {
+			dst[0][0] = src_buf[idx];
+
+		  } else {
+			  // Pixel value is undefined. Linear
+			  // interpolate from up, down, left and right pixels.
+			long idx_left = idx-1;
+			long idx_right = idx+1;
+			double weight = 0.0;
+			dst[0][0] = 0.0;
+			if (idx_left >= 0 && alpha_buf[idx_left]) {
+			      dst[0][0] += src_buf[idx_left];
+			      weight += 1.0;
+			}
+			if (idx_right < axes[0] && alpha_buf[idx_left]) {
+			      dst[0][0] += src_buf[idx_right];
+			      weight += 1.0;
+			}
+			if (alpha_up[idx]) {
+			      dst[0][0] += src_up[idx];
+			      weight += 1.0;
+			}
+			if (alpha_down[idx]) {
+			      dst[0][0] += src_down[idx];
+			      weight += 1.0;
+			}
+			if (weight > 0) {
+			      dst[0][0] /= weight;
+			}
+
+		  }
 		  dst[0][1] = 0.0;
 		  dst += 1;
 	    }
 	    DataArray::incr(src_ptr, src_ref, 1);
+	    alpha_up = alpha_buf;
+	    alpha_buf= alpha_down;
+	    src_up = src_buf;
+	    src_buf = src_down;
       }
 }
 
@@ -217,12 +267,15 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	// may be smaller then the source array, so be careful.
       size_t dst_pixel_count = DataArray::get_pixel_count(dst_axes);
 
+	// We will use these arrays to hold various FFT intermediate
+	// results.
       fftw_complex*src1_array = (fftw_complex*)fftw_malloc(dst_pixel_count * sizeof(fftw_complex));
       fftw_complex*src2_array = (fftw_complex*)fftw_malloc(dst_pixel_count * sizeof(fftw_complex));
 
       qassert(src1_array);
       qassert(src2_array);
 
+	// Plan all our forward and backward FF transforms.
       fftw_plan plan1 = fftw_plan_dft_1d(dst_pixel_count, src1_array, src1_array,
 					 FFTW_FORWARD, FFTW_ESTIMATE);
       fftw_plan plan2 = fftw_plan_dft_1d(dst_pixel_count, src2_array, src2_array,
@@ -230,12 +283,14 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       fftw_plan pland = fftw_plan_dft_1d(dst_pixel_count, src1_array, src1_array,
 					 FFTW_BACKWARD, FFTW_ESTIMATE);
 
+	// Get and FFT the source arrays...
       get_complex_array(dst_axes, src1_array, src1, src1_pnt);
-      get_complex_array(dst_axes, src2_array, src2, src2_pnt);
-
       fftw_execute(plan1);
+
+      get_complex_array(dst_axes, src2_array, src2, src2_pnt);
       fftw_execute(plan2);
 
+	// Conjugate the source arrays into the src1 array.
       for (size_t idx = 0 ; idx < dst_pixel_count ; idx += 1) {
 	    fftw_complex*cur1 = src1_array + idx;
 	    fftw_complex*cur2 = src2_array + idx;
@@ -263,36 +318,70 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 
 	// Convert the result image from complex to double by dropping
 	// the now degenerate imaginary part. While we are at it, look
-	// for the maximum value. This will be our correlation result.
+	// for the maximum and minimum values. We will use those
+	// values later to normalize and select correlation results.
       vector<long> addr = DataArray::zero_addr(dst_axes.size());
       fftw_complex*ptr = src1_array;
-      vector<long> max_ptr = addr;
       double max_val = src1_array[0][0];
+      double min_val = src1_array[0][0];
       do {
 	    for (long idx = 0 ; idx < dst_axes[0] ; idx += 1) {
 		  res_buf[idx] = ptr[idx][0];
-		  if (res_buf[idx] > max_val) {
+		  if (res_buf[idx] < min_val)
+			min_val = res_buf[idx];
+		  if (res_buf[idx] > max_val)
 			max_val = res_buf[idx];
-			max_ptr = addr;
-			max_ptr[0] = idx;
-		  }
 	    }
 	    dst->set_line(addr, dst_axes[0], res_buf);
 	    ptr += src1_axes[0];
       } while (DataArray::incr(addr, dst_axes, 1));
 
+	// Find the maximum by finding the barycenter of the
+	// array. Bias the array so that the min value is zero, and
+	// threshold at (max-min)/sqrt(2) so that only "interesting"
+	// points go into locating the peak.
+
+	// Use the barycenter instead of the simple maximum so that we
+	// get sub-pixel accuracy. (Am I fooling myself?) Note that
+	// the expectation is that the barycenter will probably be
+	// near the origin, and the phase correlation generates a
+	// circular result, so shift coordinates half way to the far
+	// side to the negative part of the axis.
+
+      double test_thresh = (max_val - min_val) * 0.707;
+      vector<double> moment (dst_axes.size());
+      double mass = 0.0;
+      addr = DataArray::zero_addr(dst_axes.size());
+      do {
+	    int has_alpha = 0;
+	    dst->get_line(addr, dst_axes[0], res_buf, has_alpha);
+	    for (long idx = 0 ; idx < dst_axes[0] ; idx += 1) {
+		  res_buf[idx] -= min_val;
+		  if (res_buf[idx] <= test_thresh)
+			continue;
+
+		  double arm = idx;
+		  if (arm >= dst_axes[0]/2)
+			arm -= dst_axes[0];
+		  mass += res_buf[idx];
+		  moment[0] += arm * res_buf[idx];
+		  for (size_t coord = 1 ; coord < moment.size() ; coord += 1) {
+			arm = addr[coord];
+			if (arm >= dst_axes[coord]/2)
+			      arm -= dst_axes[coord];
+			moment[coord] += arm * res_buf[idx];
+		  }
+	    }
+      } while (DataArray::incr(addr, dst_axes, 1));
+
+      vector<double> max_ptr (addr.size());
+      for (size_t coord = 0 ; coord < moment.size() ; coord += 1)
+	    max_ptr[coord] = moment[coord] / mass;
+
       delete[]res_buf;
 
       fftw_destroy_plan(pland);
       fftw_free(src1_array);
-
-	// The resulting offset position assumes the image wraps, and
-	// will give a positive result. But we would rather return a
-	// small negative value.
-      for (size_t idx = 0 ; idx < max_ptr.size() ; idx += 1) {
-	    if (max_ptr[idx] > src1_axes[idx]/2)
-		  max_ptr[idx] -= src1_axes[idx];
-      }
 
       Tcl_Obj*addr_obj = listobj_from_vector_(max_ptr);
       Tcl_SetObjResult(tcl_engine_, addr_obj);
