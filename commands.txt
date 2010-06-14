@@ -105,6 +105,23 @@ accounts for blank pixels by not adding them into the result. The
 destination image is scaled by the number of input values per bin, so
 that the destination pixels have the same range as the source pixels.
 
+* stack <dst> <alpha> <point> <src>
+
+Add a source image into the destination image. The destination, alpha
+and source images must already exist.
+
+The <dst> image is the destination where the source image is added
+in. The <point> is where in the <dst> image to add in the origin of
+the <src> image. Any samples in the <src> image that do not map onto a
+<dst> sample are ignored.
+
+The <alpha> array is incremented at each point where a <src> sample is
+added into the <dst> array. If there are no valid <src> points for a
+given sample of the <dst> array, the corresponding <alpha> sample is
+not incremented. The <alpha> array is used to keep track of which
+samples of the <dst> actually have valid results, and also to help
+normalize those results later.
+
 * table <name> create <column-info>...
 * table <name> cols
 * table <name> rows
