@@ -42,6 +42,14 @@ Get a list of the bench tree items that have script names.
 
 Get the display string for the named item.
 
+* choose_one <message> <item>...
+
+Put up a dialog box and ask the user to choose from a list of items.
+The <message> is the question that is displayed in the dialog box, and
+the remaining arguments are words to be collected into a ComboBox. The
+user selects one of the words and pressed OK, and the result from the
+command is the word that the user selected.
+
 * copy <work/dst> <src>
 
 Copy the source data array to the named item in the work folder. The
