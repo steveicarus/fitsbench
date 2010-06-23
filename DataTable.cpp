@@ -31,6 +31,7 @@ DataTable::type_t DataTable::type_from_string(const string&str)
 	    { "uint8",  DT_UINT8 },
 	    { "int16",  DT_INT16 },
 	    { "int32",  DT_INT32 },
+	    { "double", DT_DOUBLE },
 	    { "string", DT_STRING },
 	    { 0, DT_VOID }
       };

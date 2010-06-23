@@ -584,12 +584,15 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
 		case DT_INT32:
 		  tform[idx] = strdup("J");
 		  break;
+		case DT_DOUBLE:
+		  tform[idx] = strdup("D");
+		  break;
 		case DT_STRING:
 		  qassert(cur.max_elements > 0);
 		  tform[idx] = strdup(QString("PA(%1)").arg(cur.max_elements).toAscii().constData());
 		  break;
 		default:
-		  qinternal_error("Type code not implemented");
+		  qinternal_error(QString("Type code %1 not implemented in column %2") .arg(cur.type) .arg(idx));
 		  tform[idx] = "A";
 		  break;
 	    }
@@ -622,6 +625,23 @@ int WorkFolder::Table::set_value_int32(size_t row, size_t col, int32_t val)
       fits_write_col(fd_, TINT32BIT, col+1, row+1, 1, 1, &val, &status);
       if (status != 0) {
 	    show_fits_error_stack(QString("Error writing int32 at row=%1, col=%2").arg(row).arg(col));
+	    return -1;
+      }
+
+      preview_view_changed();
+      return 0;
+}
+
+int WorkFolder::Table::set_value_double(size_t row, size_t col, double val)
+{
+      if (fd_ == 0) return -1;
+      if (col >= table_cols()) return -1;
+      if (row > table_rows()) return -1;
+
+      int status = 0;
+      fits_write_col(fd_, TDOUBLE, col+1, row+1, 1, 1, &val, &status);
+      if (status != 0) {
+	    show_fits_error_stack(QString("Error writing double at row=%1, col=%2").arg(row).arg(col));
 	    return -1;
       }
 
@@ -710,6 +730,9 @@ DataTable::column_t WorkFolder::Table::table_col_info(size_t col)
 	  case -TSTRING: // Variable length array of char
 	    res.type = DT_STRING;
 	    break;
+	  case TDOUBLE:
+	    res.type = DT_DOUBLE;
+	    break;
 	  default:
 	    qinternal_error(QString("Unhandled type code %1").arg(typecode));
 	    break;
@@ -753,6 +776,19 @@ int32_t WorkFolder::Table::table_value_int32(size_t row, size_t col)
       fits_read_col(fd_, TINT32BIT, col+1, row+1, 1, 1, 0,
 		    &val, 0, &status);
       if (status != 0) show_fits_error_stack(QString("Error reading int32 at row=%1, col=%2").arg(row).arg(col));
+
+      return val;
+}
+
+double WorkFolder::Table::table_value_double(size_t row, size_t col)
+{
+      qassert(fd_ && col < table_cols() && row < table_rows());
+
+      int status = 0;
+      double val = 0.0;
+      fits_read_col(fd_, TDOUBLE, col+1, row+1, 1, 1, 0,
+		    &val, 0, &status);
+      if (status != 0) show_fits_error_stack(QString("Error reading double at row=%1, col=%2").arg(row).arg(col));
 
       return val;
 }

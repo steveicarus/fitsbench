@@ -19,6 +19,7 @@
 
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
+# include  <iostream>
 # include  "qassert.h"
 
 using namespace std;
@@ -147,6 +148,9 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 		case DataTable::DT_INT32:
 		  res = Tcl_NewLongObj(table->table_value_int32(row, col));
 		  break;
+		case DataTable::DT_DOUBLE:
+		  res = Tcl_NewDoubleObj(table->table_value_double(row, col));
+		  break;
 		default:
 		  Tcl_AppendResult(tcl_engine_, "Unsupported column type", 0);
 		  return TCL_ERROR;
@@ -185,11 +189,16 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 
 	    DataTable::column_t info = table->table_col_info(col);
 	    long val_long;
+	    double val_double;
 	    char*val_text;
 	    switch (info.type) {
 		case DataTable::DT_INT32:
 		  Tcl_GetLongFromObj(tcl_engine_, objv[5], &val_long);
 		  table->set_value_int32(row, col, val_long);
+		  break;
+		case DataTable::DT_DOUBLE:
+		  Tcl_GetDoubleFromObj(tcl_engine_, objv[5], &val_double);
+		  table->set_value_double(row, col, val_double);
 		  break;
 		case DataTable::DT_STRING:
 		  val_text = Tcl_GetString(objv[5]);

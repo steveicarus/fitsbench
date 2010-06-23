@@ -389,6 +389,7 @@ class WorkFolder  : public BenchFile {
 	    int create_table(std::vector<column_t>&info);
 
 	    int set_value_int32(size_t row, size_t col, int32_t val);
+	    int set_value_double(size_t row, size_t col, double val);
 	    int set_value_string(size_t row, size_t col, const QString&val);
 
 	  public: // Implementations of DataTable virtual methods
@@ -399,6 +400,7 @@ class WorkFolder  : public BenchFile {
 	    uint8_t table_value_uint8(size_t row, size_t col);
 	    int16_t table_value_int16(size_t row, size_t col);
 	    int32_t table_value_int32(size_t row, size_t col);
+	    double  table_value_double(size_t row, size_t col);
 	    QString table_value_string(size_t row, size_t col);
 
 	  protected: // Implementations of Previewer virtual methods.

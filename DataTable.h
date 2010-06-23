@@ -37,6 +37,7 @@ class DataTable {
 	    DT_UINT8,
 	    DT_INT16,
 	    DT_INT32,
+	    DT_DOUBLE,
 	    DT_STRING  // Variable array of ASCII
       };
 
@@ -62,6 +63,7 @@ class DataTable {
       virtual uint8_t table_value_uint8(size_t row, size_t col) =0;
       virtual int16_t table_value_int16(size_t row, size_t col) =0;
       virtual int32_t table_value_int32(size_t row, size_t col) =0;
+      virtual double  table_value_double(size_t row, size_t col) =0;
       virtual QString table_value_string(size_t row, size_t col) =0;
 };
 

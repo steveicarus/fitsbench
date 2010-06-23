@@ -60,6 +60,9 @@ SimpleTableView::SimpleTableView(QWidget*parent, DataTable*src, const QString&ti
 		      case DataTable::DT_INT32:
 			item_text = QString::number(src->table_value_int32(row_idx, col_idx));
 			break;
+		      case DataTable::DT_DOUBLE:
+			item_text = QString::number(src->table_value_double(row_idx, col_idx));
+			break;
 		      case DataTable::DT_STRING:
 			item_text = src->table_value_string(row_idx, col_idx);
 			break;
