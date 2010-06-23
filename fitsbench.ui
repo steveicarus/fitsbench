@@ -142,15 +142,20 @@
     <addaction name="menuNew" />
     <addaction name="actionOpenImage" />
     <addaction name="actionOpenFITSBench_Work_Folder" />
+    <addaction name="separator" />
+    <addaction name="actionQuit" />
+   </widget>
+   <widget class="QMenu" name="menuActions" >
+    <property name="title" >
+     <string>Actions</string>
+    </property>
+    <addaction name="actionDefine_Action" />
+    <addaction name="separator" />
    </widget>
    <addaction name="menuFile" />
+   <addaction name="menuActions" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
-  <action name="actionQuit" >
-   <property name="text" >
-    <string>Quit</string>
-   </property>
-  </action>
   <action name="actionOpenImage" >
    <property name="text" >
     <string>Open Image...</string>
@@ -169,6 +174,16 @@
   <action name="actionOpenFITSBench_Work_Folder" >
    <property name="text" >
     <string>Open FITSBench Work Folder...</string>
+   </property>
+  </action>
+  <action name="actionDefine_Action" >
+   <property name="text" >
+    <string>Define Action...</string>
+   </property>
+  </action>
+  <action name="actionQuit" >
+   <property name="text" >
+    <string>Quit</string>
    </property>
   </action>
  </widget>

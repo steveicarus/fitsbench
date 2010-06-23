@@ -64,6 +64,14 @@ dimensions then the source array, but must fit entirely within the
 source array. Also, the <start-point> dimensions must match the
 dimensions of the <src> image.
 
+* define_action <name> <script>
+
+Define a new action in the "Actions" menu. The <name> is the name that
+appears in the menu, and the <script> is the tcl script that is
+executed when the action is activated. If this command is executed
+with no arguments, it pops up a dialog box to ask for them
+interactively.
+
 * scratch new <name> <display-name> <type> <axes-list>
 
 Create a new scratch image with the script name <name>. Use

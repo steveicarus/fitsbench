@@ -39,6 +39,7 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "choose_one",      &FitsbenchMain::ftcl_choose_one_thunk_ },
       { "copy",            &FitsbenchMain::ftcl_copy_thunk_ },
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
+      { "define_action",   &FitsbenchMain::ftcl_define_action_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
       { "normalize",       &FitsbenchMain::ftcl_normalize_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },
@@ -66,6 +67,12 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
       connect(ui.actionOpenFITSBench_Work_Folder,
 	      SIGNAL(triggered()),
 	      SLOT(action_OpenFITSBench_Work_Folder_slot_()));
+
+      ui.actionDefine_Action->setData(QString("define_action"));
+
+      connect(ui.menuActions,
+	      SIGNAL(triggered(QAction*)),
+	      SLOT(defined_action_slot_(QAction*)));
 
       connect(ui.bench_tree,
 	      SIGNAL(itemClicked(QTreeWidgetItem*,int)),
@@ -300,17 +307,14 @@ void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
       }
 }
 
-void FitsbenchMain::commands_line_slot_(void)
+void FitsbenchMain::run_command_string_(const QString&script)
 {
-      QString line = ui.commands_line->text();
-      ui.commands_line->clear();
-
       int save_weight = ui.commands_log->fontWeight();
       ui.commands_log->setFontWeight(QFont::Bold);
-      ui.commands_log->append(line);
+      ui.commands_log->append(script);
       ui.commands_log->setFontWeight(save_weight);
 
-      int tcl_rc = Tcl_Eval(tcl_engine_, line.toStdString().c_str());
+      int tcl_rc = Tcl_Eval(tcl_engine_, script.toStdString().c_str());
       QString msg (Tcl_GetStringResult(tcl_engine_));
 
       if (! msg.isEmpty()) {
@@ -322,4 +326,11 @@ void FitsbenchMain::commands_line_slot_(void)
 	    ui.commands_log->append(msg);
 	    ui.commands_log->setTextColor(save_color);
       }
+}
+
+void FitsbenchMain::commands_line_slot_(void)
+{
+      QString line = ui.commands_line->text();
+      ui.commands_line->clear();
+      run_command_string_(line);
 }

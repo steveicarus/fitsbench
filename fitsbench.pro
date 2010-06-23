@@ -33,7 +33,7 @@ HEADERS += ChooseOne.h
 SOURCES += ChooseOne.cpp
 
 # Script command implementations...
-SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_bench.cpp ftcl_choose_one.cpp ftcl_copy.cpp ftcl_crop.cpp ftcl_fft.cpp ftcl_normalize.cpp ftcl_pixbin.cpp ftcl_stack.cpp ftcl_table.cpp
+SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_bench.cpp ftcl_choose_one.cpp ftcl_copy.cpp ftcl_crop.cpp ftcl_define_action.cpp ftcl_fft.cpp ftcl_normalize.cpp ftcl_pixbin.cpp ftcl_stack.cpp ftcl_table.cpp
 
 LIBS += -ltcl
 
