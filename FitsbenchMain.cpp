@@ -40,6 +40,7 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "copy",            &FitsbenchMain::ftcl_copy_thunk_ },
       { "crop",            &FitsbenchMain::ftcl_crop_thunk_ },
       { "define_action",   &FitsbenchMain::ftcl_define_action_thunk_ },
+      { "folder",          &FitsbenchMain::ftcl_folder_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
       { "normalize",       &FitsbenchMain::ftcl_normalize_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },

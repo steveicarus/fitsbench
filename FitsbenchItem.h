@@ -420,6 +420,10 @@ class WorkFolder  : public BenchFile {
       Image* get_image(const QString&name);
       Image* find_image(const QString&name) const;
 
+	// Get a list of the image/table names within the folder.
+      std::vector<QString> image_names() const;
+      std::vector<QString> table_names() const;
+
 	// Return the folder table by name, or null if it doesn't exist.
       Table* find_table(const QString&name) const;
 

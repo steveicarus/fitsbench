@@ -105,6 +105,7 @@ class FitsbenchMain : public QMainWindow {
       int ftcl_copy_(int objc, Tcl_Obj*const objv[]);
       int ftcl_crop_(int objc, Tcl_Obj*const objv[]);
       int ftcl_define_action_(int objc, Tcl_Obj*const objv[]);
+      int ftcl_folder_(int objc, Tcl_Obj*const objv[]);
       int ftcl_scratch_(int objc, Tcl_Obj*const objv[]);
       int ftcl_minmax_(int objc, Tcl_Obj*const objv[]);
       int ftcl_normalize_(int objc, Tcl_Obj*const objv[]);
@@ -129,6 +130,8 @@ class FitsbenchMain : public QMainWindow {
 				  int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_define_action_thunk_(ClientData obj, Tcl_Interp*interp,
 					   int objc, Tcl_Obj*CONST objv[]);
+      static int ftcl_folder_thunk_(ClientData obj, Tcl_Interp*interp,
+				    int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_scratch_thunk_(ClientData obj, Tcl_Interp*interp,
 				     int objc, Tcl_Obj*CONST objv[]);
       static int ftcl_minmax_thunk_(ClientData obj, Tcl_Interp*interp,

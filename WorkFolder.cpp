@@ -107,6 +107,28 @@ FitsbenchItem* WorkFolder::find_item(const QString&name) const
       return 0;
 }
 
+std::vector<QString> WorkFolder::image_names() const
+{
+      vector<QString> res;
+      for (map<QString,Image*>::const_iterator cur = image_map_.begin()
+		 ; cur != image_map_.end() ; cur ++) {
+	    res.push_back(cur->first);
+      }
+
+      return res;
+}
+
+std::vector<QString> WorkFolder::table_names() const
+{
+      vector<QString> res;
+      for (map<QString,Table*>::const_iterator cur = table_map_.begin()
+		 ; cur != table_map_.end() ; cur ++) {
+	    res.push_back(cur->first);
+      }
+
+      return res;
+}
+
 void WorkFolder::map_folder_item(const QString&key, WorkFolder::WorkFits*item)
 {
       qassert(item->parent() == this);
