@@ -154,6 +154,7 @@ class FitsbenchMain : public QMainWindow {
       void action_OpenFITSBench_Work_Folder_slot_(void);
       void action_FITS_File_slot_(void);
       void action_FITSBench_Work_Folder_slot_(void);
+      void action_Open_TCL_Script_slot_(void);
 
       void defined_action_slot_(QAction*);
 

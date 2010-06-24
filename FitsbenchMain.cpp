@@ -67,6 +67,9 @@ FitsbenchMain::FitsbenchMain(QWidget*parent)
       connect(ui.actionOpenFITSBench_Work_Folder,
 	      SIGNAL(triggered()),
 	      SLOT(action_OpenFITSBench_Work_Folder_slot_()));
+      connect(ui.actionOpen_TCL_Script,
+	      SIGNAL(triggered()),
+	      SLOT(action_Open_TCL_Script_slot_()));
 
       ui.actionDefine_Action->setData(QString("define_action"));
 
@@ -193,6 +196,31 @@ void FitsbenchMain::action_OpenFITSBench_Work_Folder_slot_(void)
       QString script_name = item->getScriptName();
       if (! script_name.isEmpty())
 	    set_bench_script_name_(item, script_name);
+}
+
+void FitsbenchMain::action_Open_TCL_Script_slot_(void)
+{
+      QString start_dir;
+      QString filter (tr("TCL Scripts (*.tcl)"));
+
+      QStringList files = QFileDialog::getOpenFileNames(this, tr("Select TCL scripts to open."),
+							start_dir, filter);
+
+      for (int idx = 0 ; idx < files.size() ; idx += 1) {
+	    QFileInfo path = files.at(idx);
+
+	    int tcl_rc = Tcl_EvalFile(tcl_engine_, path.filePath().toStdString().c_str());
+	    QString msg (Tcl_GetStringResult(tcl_engine_));
+	    if  (! msg.isEmpty()) {
+		  QColor save_color = ui.commands_log->textColor();
+		  QColor use_color = save_color;
+		  if (tcl_rc != TCL_OK) use_color = QColor(255,0,0);
+
+		  ui.commands_log->setTextColor(use_color);
+		  ui.commands_log->append(msg);
+		  ui.commands_log->setTextColor(save_color);
+	    }
+      }
 }
 
 void FitsbenchMain::action_FITS_File_slot_(void)

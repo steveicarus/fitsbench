@@ -142,6 +142,7 @@
     <addaction name="menuNew" />
     <addaction name="actionOpenImage" />
     <addaction name="actionOpenFITSBench_Work_Folder" />
+    <addaction name="actionOpen_TCL_Script" />
     <addaction name="separator" />
     <addaction name="actionQuit" />
    </widget>
@@ -184,6 +185,11 @@
   <action name="actionQuit" >
    <property name="text" >
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionOpen_TCL_Script" >
+   <property name="text" >
+    <string>Open TCL Script...</string>
    </property>
   </action>
  </widget>
