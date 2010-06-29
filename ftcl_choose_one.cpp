@@ -40,9 +40,29 @@ int FitsbenchMain::ftcl_choose_one_(int objc, Tcl_Obj*const objv[])
       }
 
       message = QString(Tcl_GetString(objv[1]));
-      for (int idx = 2 ; idx < objc ; idx += 1) {
-	    QString item (Tcl_GetString(objv[idx]));
-	    choose_from << item;
+
+      if (objc == 3) {
+	    int listc;
+	    const char**listv;
+	    int code = Tcl_SplitList(tcl_engine_, Tcl_GetString(objv[2]), &listc, &listv);
+	    if (code != TCL_OK)
+		  return code;
+
+	    if (listc == 1) {
+		  Tcl_AppendResult(tcl_engine_, Tcl_GetString(objv[2]), 0);
+		  Tcl_Free((char*)listv);
+		  return TCL_OK;
+	    }
+
+	    for (int idx = 0 ; idx < listc ; idx += 1)
+		  choose_from << QString(listv[idx]);
+
+	    Tcl_Free((char*)listv);
+      } else {
+	    for (int idx = 2 ; idx < objc ; idx += 1) {
+		  QString item (Tcl_GetString(objv[idx]));
+		  choose_from << item;
+	    }
       }
 
       QString result = ChooseOne::select(this, message, choose_from);
