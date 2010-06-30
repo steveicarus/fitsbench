@@ -428,9 +428,10 @@ class WorkFolder  : public BenchFile {
       Table* find_table(const QString&name) const;
 
 	// Return the folder item by name, or null if it doesn't exist.
-      FitsbenchItem* find_item(const QString&name) const;
+      WorkFits* find_item(const QString&name) const;
 
       void map_folder_item(const QString&key, WorkFits*that);
+      void unmap_folder_item(const QString&key, WorkFits*that);
 
     private:
       QDir work_path_;

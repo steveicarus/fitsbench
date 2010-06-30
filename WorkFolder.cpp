@@ -97,11 +97,11 @@ WorkFolder::Image* WorkFolder::find_image(const QString&name) const
 	    return cur->second;
 }
 
-FitsbenchItem* WorkFolder::find_item(const QString&name) const
+WorkFolder::WorkFits* WorkFolder::find_item(const QString&name) const
 {
-      if (FitsbenchItem*cur = find_image(name))
+      if (WorkFits*cur = find_image(name))
 	    return cur;
-      if (FitsbenchItem*cur = find_table(name))
+      if (WorkFits*cur = find_table(name))
 	    return cur;
 
       return 0;
@@ -146,6 +146,17 @@ void WorkFolder::map_folder_item(const QString&key, WorkFolder::WorkFits*item)
       }
 
       qinternal_error("Unexpected WorkFits type");
+}
+
+void WorkFolder::unmap_folder_item(const QString&key, WorkFolder::WorkFits*item)
+{
+      map<QString,Image*>::iterator tmpi = image_map_.find(key);
+      if (tmpi != image_map_.end() && tmpi->second == item)
+	    image_map_.erase(tmpi);
+
+      map<QString,Table*>::iterator tmpt = table_map_.find(key);
+      if (tmpt != table_map_.end() && tmpt->second == item)
+	    table_map_.erase(tmpt);
 }
 
 WorkFolder::WorkFits::WorkFits(WorkFolder*folder, const QString&name)
@@ -577,7 +588,23 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
       int status = 0;
 
       QFileInfo img_path (folder()->work_dir(), getDisplayName() + "-t.fits");
-      qassert(! img_path.exists());
+
+      if (img_path.exists()) {
+#if 0
+	      // It should be safe to remove this file because we know
+	      // by the context that this file is no longer in use.
+	    QMessageBox::StandardButton rc = QMessageBox::question
+		  (0, QString("Replace File"),
+		   QString("Is it OK for me to replace file %1 in this folder?") .arg(img_path.fileName()),
+		   QMessageBox::Yes|QMessageBox::No,
+		   QMessageBox::No);
+	    if (rc != QMessageBox::Yes)
+		  return -1;
+#endif
+	    QDir dir = img_path.dir();
+	    dir.remove(img_path.fileName());
+      }
+
       QString path_str = img_path.filePath();
       fits_create_diskfile(&fd_, path_str.toLocal8Bit().constData(), &status);
       if (status != 0) {
@@ -615,7 +642,7 @@ int WorkFolder::Table::create_table(vector<DataTable::column_t>&info)
 		  break;
 		default:
 		  qinternal_error(QString("Type code %1 not implemented in column %2") .arg(cur.type) .arg(idx));
-		  tform[idx] = "A";
+		  tform[idx] = strdup("A");
 		  break;
 	    }
       }

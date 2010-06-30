@@ -60,6 +60,20 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
       string cmd = Tcl_GetString(objv[2]);
       if (cmd == "create") {
 
+	    if (WorkFolder::WorkFits* item = folder->find_item(name)) {
+		  QMessageBox::StandardButton rc = QMessageBox::question
+			(0, QString("Replace File"),
+			 QString("Is it OK for me to replace item %1 in folder %2?")
+		           .arg(name) .arg(folder->getDisplayName()),
+			 QMessageBox::Yes|QMessageBox::No,
+			 QMessageBox::No);
+		  if (rc != QMessageBox::Yes)
+			return -1;
+
+		  folder->unmap_folder_item(name, item);
+		  delete item;
+	    }
+
 	    WorkFolder::Table*table = new WorkFolder::Table(folder, name);
 	    folder->map_folder_item(name, table);
 
