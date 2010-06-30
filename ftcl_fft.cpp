@@ -131,7 +131,7 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 {
       if (objc < 7) {
 	    Tcl_AppendResult(tcl_engine_, "Usage: phase_correlate "
-			     "<dst> {axes} <src1> {point> <src2> {point}", 0);
+			     "<dst> {axes} <src1> {point} <src2> {point}", 0);
 	    return TCL_ERROR;
       }
 
@@ -142,6 +142,7 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       vector<long> dst_axes;
       vector<long> src1_pnt;
       vector<long> src2_pnt;
+      bool delete_dst_when_done = false;
 
 	// Detect an axes list argument that defines the axes of the
 	// destination array.
@@ -165,12 +166,15 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
       if (strcmp(tmp, "-") != 0)
 	    src2_pnt = vector_from_listobj_(objv[6]);
 
-      FitsbenchItem* dst_item = item_from_name_(dst_name);
-      if (dst_item != 0) {
-	    Tcl_AppendResult(tcl_engine_, "Image", dst_name, " already exists", 0);
-	    return TCL_ERROR;
-      }
+      delete_dst_when_done = strcmp(dst_name,"-") == 0? true : false;
 
+      if (! delete_dst_when_done) {
+	    FitsbenchItem*dst_item = item_from_name_(dst_name);
+	    if (dst_item != 0) {
+		  Tcl_AppendResult(tcl_engine_, "Image", dst_name, " already exists", 0);
+		  return TCL_ERROR;
+	    }
+      }
 
       FitsbenchItem* src1_item = item_from_name_(src1_name);
       if (src1_item == 0) {
@@ -204,17 +208,24 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 	    return TCL_ERROR;
       }
 
-	// Create the destination item as a scratch image.
+	// By now the dst_axes must have been figured out.
       qassert(dst_axes.size() != 0);
+
+	// Create the destination item as a scratch image. Note that
+	// we only create the destination image if it is not named "-".
+      DataArray*dst = 0;
+
       QString dst_disp = QString("phase_correlate(%1, %2)") .arg(src1_name) .arg(src2_name);
       ScratchImage*dst_scr = new ScratchImage(dst_disp);
-      ui.bench_tree->addTopLevelItem(dst_scr);
-      set_bench_script_name_(dst_scr, dst_name);
-
       dst_scr->reconfig(dst_axes, DataArray::DT_DOUBLE);
 
-      dst_item = dst_scr;
-      DataArray*dst = dst_scr;
+      if (!delete_dst_when_done) {
+	    ui.bench_tree->addTopLevelItem(dst_scr);
+	    set_bench_script_name_(dst_scr, dst_name);
+      }
+
+      dst = dst_scr;
+
 
 	// If the source point is not otherwise specified, use the
 	// upper left corner.
@@ -373,6 +384,9 @@ int FitsbenchMain::ftcl_phase_corr_(int objc, Tcl_Obj*const objv[])
 		  }
 	    }
       } while (DataArray::incr(addr, dst_axes, 1));
+
+      if (delete_dst_when_done)
+	    delete dst;
 
       vector<double> max_ptr (addr.size());
       for (size_t coord = 0 ; coord < moment.size() ; coord += 1)

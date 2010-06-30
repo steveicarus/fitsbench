@@ -95,7 +95,9 @@ the maximum value, and its address.
 * phase_correlate <dest> <dst-axes> <src1> <point1> <src2> <point2>
 
 Do a phase correlation of portions of <src1> and <src2> images, and
-put the resulting image into <dest>.
+put the resulting image into <dest>. If <dest> is "-", then the image
+is not actually created and the only product from this function is the
+correlated offsets.
 
 The destination array will have the data type native double and the
 dimensions given by the list <dst-axes>. For example:
