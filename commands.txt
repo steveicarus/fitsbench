@@ -92,6 +92,14 @@ Scan an image to find the minimum and maximum pixel values. The result
 is a list of 4 items: The minimum value, the address of the minimum,
 the maximum value, and its address.
 
+* normalize <src> <alpha> <target>
+
+Normalize an image by scaling the pixels based on the <alpha> array
+values. The idea is to scale the <src> image and <alpha> image
+together so that all the bits of the <alpha> image have the same
+<target> value. This function is intended to go with the "stack"
+function described below.
+
 * phase_correlate <dest> <dst-axes> <src1> <point1> <src2> <point2>
 
 Do a phase correlation of portions of <src1> and <src2> images, and
