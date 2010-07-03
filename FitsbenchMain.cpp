@@ -148,6 +148,17 @@ void FitsbenchMain::clear_bench_script_names_(FitsbenchItem*item)
       }
 }
 
+void FitsbenchMain::bench_tree_delete_item_(FitsbenchItem*item)
+{
+      int item_index = ui.bench_tree->indexOfTopLevelItem(item);
+      qassert(item_index >= 0);
+
+      clear_bench_script_names_(item);
+      QTreeWidgetItem*tmp = ui.bench_tree->takeTopLevelItem(item_index);
+      assert(tmp == item);
+      delete item;
+}
+
 void FitsbenchMain::action_OpenImage_slot_(void)
 {
       QString start_dir;
@@ -326,13 +337,7 @@ void FitsbenchMain::bench_tree_custom_menu_slot_(const QPoint&pos)
 	    if (! text.isNull()) set_bench_script_name_(item, text);
 
       } else if (hit == &clos) {
-	    assert(item_index >= 0);
-	      // Remove any related script names
-	    clear_bench_script_names_(item);
-	      // Remove the item from the tree
-	    QTreeWidgetItem*tmp = ui.bench_tree->takeTopLevelItem(item_index);
-	    assert(tmp == raw_item);
-	    delete raw_item;
+	    bench_tree_delete_item_(item);
       }
 }
 

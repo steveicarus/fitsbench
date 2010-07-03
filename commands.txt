@@ -152,6 +152,7 @@ normalize those results later.
 * table <name> cols
 * table <name> rows
 * table <name> set <row> <col> <value>
+* table <name> get <row> <col>
 
 These variants of the "table" command allow for manipulation of
 tables. In all cases the first argument is the table to manipulate,

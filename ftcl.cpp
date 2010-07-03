@@ -295,14 +295,6 @@ int FitsbenchMain::ftcl_minmax_thunk_(ClientData raw, Tcl_Interp*interp,
       return eng->ftcl_minmax_(objc, objv);
 }
 
-int FitsbenchMain::ftcl_scratch_thunk_(ClientData raw, Tcl_Interp*interp,
-				       int objc, Tcl_Obj*CONST objv[])
-{
-      FitsbenchMain*eng = reinterpret_cast<FitsbenchMain*> (raw);
-      assert(eng->tcl_engine_ == interp);
-      return eng->ftcl_scratch_(objc, objv);
-}
-
 int FitsbenchMain::ftcl_axes_(int objc, Tcl_Obj*const objv[])
 {
       if (objc < 2) {
@@ -433,47 +425,4 @@ int FitsbenchMain::ftcl_minmax_(int objc, Tcl_Obj*const objv[])
 
       Tcl_SetObjResult(tcl_engine_, Tcl_NewListObj(4, res_obj));
       return TCL_OK;
-      }
-
-int FitsbenchMain::ftcl_scratch_(int objc, Tcl_Obj*const objv[])
-{
-      if (objc < 2) {
-	    Tcl_AppendResult(tcl_engine_, "Missing subcommand.", 0);
-	    return TCL_ERROR;
-      }
-
-      const char*subcmd = Tcl_GetString(objv[1]);
-      if (subcmd == 0)
-	    return TCL_ERROR;
-
-      if (strcmp(subcmd, "new") == 0) {
-	      // The format of the "new" subcommand is:
-	      //   scratch new <name> <display-name> <type> <axes-list>
-
-	    if (objc < 6) {
-		  Tcl_AppendResult(tcl_engine_, "Usage: "
-				   "scratch new <name> <display> <type> <axes>", 0);
-		  return TCL_ERROR;
-	    }
-	    qassert(objc >= 6);
-
-	    QString name = Tcl_GetString(objv[2]);
-	    QString disp_name = Tcl_GetString(objv[3]);
-	    string type_str = Tcl_GetString(objv[4]);
-	    DataArray::type_t type = DataArray::type_from_string(type_str);
-
-	    vector<long> axes = vector_from_listobj_(objv[5]);
-
-	    ScratchImage*item = new ScratchImage(disp_name);
-	    ui.bench_tree->addTopLevelItem(item);
-
-	    item->reconfig(axes, type);
-	    set_bench_script_name_(item, name);
-
-	    return TCL_OK;
-      }
-
-      Tcl_AppendResult(tcl_engine_, "Invalid subcommand: ", subcmd, 0);
-      return TCL_ERROR;
-
 }

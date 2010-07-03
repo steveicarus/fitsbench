@@ -69,6 +69,8 @@ class FitsbenchMain : public QMainWindow {
       WorkFolder* workfolder_from_name_(const QString&path, QString&nam) const;
       WorkFolder* workfolder_from_name_(Tcl_Obj*obj, QString&nam) const;
 
+      void bench_tree_delete_item_(FitsbenchItem*item);
+
     private:
 	// The TCL engine...
       Tcl_Interp*tcl_engine_;

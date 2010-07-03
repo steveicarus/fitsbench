@@ -40,6 +40,7 @@ int FitsbenchMain::ftcl_table_thunk_(ClientData raw, Tcl_Interp*interp,
  * table <name> cols
  * table <name> rows
  * table <name> set <row> <col> <value>
+ * table <name> get <row> <col>
  */
 int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 {
@@ -159,6 +160,11 @@ int FitsbenchMain::ftcl_table_(int objc, Tcl_Obj*const objv[])
 	    DataTable::column_t info = table->table_col_info(col);
 	    Tcl_Obj*res = 0;
 	    switch (info.type) {
+		case DataTable::DT_STRING:
+		    { QString tmp = table->table_value_string(row, col);
+		      res = Tcl_NewStringObj(tmp.toUtf8().constData(), -1);
+		    }
+		    break;
 		case DataTable::DT_INT32:
 		  res = Tcl_NewLongObj(table->table_value_int32(row, col));
 		  break;
