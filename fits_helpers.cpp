@@ -181,6 +181,17 @@ int render_chdu_into_qimage(fitsfile*fd, int ridx, int gidx, int bidx,
 	    delete[]rrow;
 	    delete[]grow;
 	    delete[]brow;
+
+      } else if (bitpix == ULONG_IMG) {
+	    unsigned int*rrow = new unsigned int [naxes[0]];
+	    unsigned int*grow = new unsigned int [naxes[0]];
+	    unsigned int*brow = new unsigned int [naxes[0]];
+	    do_render_fits(fd, TUINT, naxis, naxes, ridx, gidx, bidx,
+			   rrow, grow, brow, image, status);
+	    delete[]rrow;
+	    delete[]grow;
+	    delete[]brow;
+
       } else {
 	    QString text = QString ("I don't know how to render bitpix=%1").arg(bitpix);
 	    QMessageBox::warning(0, "FITS render error", text);

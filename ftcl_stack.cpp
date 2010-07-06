@@ -19,6 +19,7 @@
 
 # include  "FitsbenchMain.h"
 # include  "FitsbenchItem.h"
+# include  <iostream>
 # include  "qassert.h"
 
 using namespace std;
@@ -31,9 +32,9 @@ int FitsbenchMain::ftcl_stack_thunk_(ClientData raw, Tcl_Interp*interp,
       return eng->ftcl_stack_(objc, objv);
 }
 
-static void process_line(DataArray*dst, DataArray*alpha,
-			 const vector<long>&dst_ptr, long wid,
-			 DataArray*src, const vector<long>&src_ptr);
+static void stack_process_line(DataArray*dst, DataArray*alpha,
+			       const vector<long>&dst_ptr, long wid,
+			       DataArray*src, const vector<long>&src_ptr);
 
 /*
  * Add a source image into a destination image. This stacks a single
@@ -197,15 +198,17 @@ int FitsbenchMain::ftcl_stack_(int objc, Tcl_Obj*const objv[])
       for (dst_ptr.rewind(), src_ptr.rewind()
 		 ; dst_ptr.valid() && src_ptr.valid()
 		 ; dst_ptr.incr(1,1), src_ptr.incr(1,1)) {
-	    process_line(dst, alpha, dst_ptr.value(), wid, src, src_ptr.value());
+	    stack_process_line(dst, alpha,
+			       dst_ptr.value(), wid,
+			       src, src_ptr.value());
       }
 
       return TCL_OK;
 }
 
-static void process_line(DataArray*dst, DataArray*alpha,
-			 const vector<long>&dst_ptr, long wid,
-			 DataArray*src, const vector<long>&src_ptr)
+static void stack_process_line(DataArray*dst, DataArray*alpha,
+			       const vector<long>&dst_ptr, long wid,
+			       DataArray*src, const vector<long>&src_ptr)
 {
       vector<uint32_t> sum (wid);
       vector<uint8_t>  count(wid);
@@ -225,6 +228,6 @@ static void process_line(DataArray*dst, DataArray*alpha,
 	    }
       }
 
-      rc = dst  ->set_line(dst_ptr, wid, &sum[0]);
-      rc = alpha->set_line(dst_ptr, wid, &count[0]);
+      rc = dst  ->set_line<uint32_t>(dst_ptr, wid, &sum[0]);
+      rc = alpha->set_line<uint8_t> (dst_ptr, wid, &count[0]);
 }

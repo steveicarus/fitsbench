@@ -233,6 +233,7 @@ WorkFolder::Image::Image(WorkFolder*folder, const QString&name, const QFileInfo&
 WorkFolder::Image::~Image()
 {
 }
+
 int WorkFolder::Image::copy_from_array(DataArray*src)
 {
       DataArray::type_t src_type = src->get_type();
@@ -259,11 +260,11 @@ int WorkFolder::Image::copy_from_array(DataArray*src)
 
       } else if (src_type == DT_UINT32) {
 	    uint32_t*buf = new uint32_t[axes[0]];
-	    rc = do_copy_lines_(src, buf, TULONG);
+	    rc = do_copy_lines_(src, buf, TUINT);
 
-      } else if (src_type == DT_INT16) {
+      } else if (src_type == DT_INT32) {
 	    int32_t*buf = new int32_t[axes[0]];
-	    rc = do_copy_lines_(src, buf, TLONG);
+	    rc = do_copy_lines_(src, buf, TINT);
 
       } else {
 	    qinternal_error("Source type not handled here.");
@@ -387,8 +388,14 @@ int WorkFolder::Image::set_line_raw(const std::vector<long>&addr, long wid,
 
       int datatype = 0;
       switch (type) {
+	  case DataArray::DT_UINT8:
+	    datatype = TBYTE;
+	    break;
 	  case DataArray::DT_UINT16:
 	    datatype = TUSHORT;
+	    break;
+	  case DataArray::DT_UINT32:
+	    datatype = TUINT;
 	    break;
 	  default:
 	    qinternal_error("Source type not handled here");
@@ -408,7 +415,12 @@ int WorkFolder::Image::set_line_raw(const std::vector<long>&addr, long wid,
 	    return 0;
       }
 
-      if (type == DT_UINT16) {
+      if (type == DT_UINT8) {
+	    uint8_t*buf = new uint8_t[wid];
+	    uint8_t use_blank = 0;
+	    return do_set_line_alpha_(addr_tmp, wid, buf, TBYTE, use_blank, data, (uint8_t*)0);
+
+      } else if (type == DT_UINT16) {
 	    uint16_t*buf = new uint16_t[wid];
 	    int16_t fits_blank = 0x7fff;
 	    uint16_t use_blank = 0xffff;
@@ -417,6 +429,16 @@ int WorkFolder::Image::set_line_raw(const std::vector<long>&addr, long wid,
 	    fits_set_imgnull(fd_, fits_blank, &status);
 	    qassert_fits_status(status);
 	    return do_set_line_alpha_(addr_tmp, wid, buf, TUSHORT, use_blank, data, alpha);
+
+      } else if (type == DT_UINT32) {
+	    uint32_t*buf = new uint32_t[wid];
+	    int32_t fits_blank = 0x7fffffff;
+	    uint32_t use_blank = 0xffffffff;
+	    int status = 0;
+	    fits_update_key(fd_, TLONG, "BLANK", &fits_blank, 0, &status);
+	    fits_set_imgnull(fd_, fits_blank, &status);
+	    qassert_fits_status(status);
+	    return do_set_line_alpha_(addr_tmp, wid, buf, TUINT, use_blank, data, alpha);
       }
 
       qinternal_error("WorkFits::Image::set_line_raw not implemented");
@@ -446,6 +468,11 @@ int WorkFolder::Image::get_line_raw(const std::vector<long>&addr, long wid,
 	    break;
 	  case DataArray::DT_UINT16:
 	    fits_read_pixnull(fd_, TUSHORT, &fpixel[0], wid,
+			      data, &nulmask[0], &anynul, &status);
+	    break;
+
+	  case DataArray::DT_UINT32:
+	    fits_read_pixnull(fd_, TUINT, &fpixel[0], wid,
 			      data, &nulmask[0], &anynul, &status);
 	    break;
 

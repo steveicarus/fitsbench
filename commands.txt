@@ -72,6 +72,10 @@ executed when the action is activated. If this command is executed
 with no arguments, it pops up a dialog box to ask for them
 interactively.
 
+* fill <name> <value>
+
+Fill the named image with a constant value.
+
 * folder <name> images
 * folder <name> tables
 
@@ -79,6 +83,11 @@ Operate on folders. The <name> is the script name for the folder, and
 the <command> is the command to perform. The "images" command returns
 a list of the images in the folder, and the "tables" command returns a
 list of the tables in the folder.
+
+* image <name> create <type> <axes>
+
+Create a new image within a work folder. The <name> has the form
+<work>/<name>.
 
 * scratch new <name> <display-name> <type> <axes-list>
 

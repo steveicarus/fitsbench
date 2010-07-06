@@ -1,5 +1,6 @@
 
 CONFIG += qt
+#CONFIG += debug
 
 LIBS += ./sub/lib/libcfitsio.a ./sub/lib/libfftw3.a
 INCLUDEPATH += ./sub/include
@@ -33,7 +34,12 @@ HEADERS += ChooseOne.h
 SOURCES += ChooseOne.cpp
 
 # Script command implementations...
-SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_bench.cpp ftcl_choose_one.cpp ftcl_copy.cpp ftcl_crop.cpp ftcl_define_action.cpp ftcl_fft.cpp ftcl_folder.cpp ftcl_normalize.cpp ftcl_pixbin.cpp ftcl_scratch.cpp ftcl_stack.cpp ftcl_table.cpp
+SOURCES += ftcl.cpp ftcl_bayer.cpp ftcl_bench.cpp ftcl_choose_one.cpp
+SOURCES += ftcl_copy.cpp ftcl_crop.cpp ftcl_define_action.cpp ftcl_fft.cpp
+SOURCES += ftcl_fill.cpp
+SOURCES += ftcl_folder.cpp
+SOURCES += ftcl_image.cpp
+SOURCES += ftcl_normalize.cpp ftcl_pixbin.cpp ftcl_scratch.cpp ftcl_stack.cpp ftcl_table.cpp
 
 LIBS += -ltcl
 
