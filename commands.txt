@@ -89,6 +89,12 @@ list of the tables in the folder.
 Create a new image within a work folder. The <name> has the form
 <work>/<name>.
 
+* import <name> <path>
+
+Import an image from an image file into the work folder. The <name> is
+expected to have the form <work>/<item> where <work> is the name of
+the work folder and the <item> is the name to create within the folder.
+
 * scratch new <name> <display-name> <type> <axes-list>
 
 Create a new scratch image with the script name <name>. Use

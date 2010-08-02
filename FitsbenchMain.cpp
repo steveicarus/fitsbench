@@ -43,6 +43,7 @@ const FitsbenchMain::ftcl_command_table FitsbenchMain::ftcl_commands[] = {
       { "fill",            &FitsbenchMain::ftcl_fill_thunk_ },
       { "folder",          &FitsbenchMain::ftcl_folder_thunk_ },
       { "image",           &FitsbenchMain::ftcl_image_thunk_ },
+      { "import",          &FitsbenchMain::ftcl_import_thunk_ },
       { "minmax",          &FitsbenchMain::ftcl_minmax_thunk_ },
       { "normalize",       &FitsbenchMain::ftcl_normalize_thunk_ },
       { "phase_correlate", &FitsbenchMain::ftcl_phase_corr_thunk_ },

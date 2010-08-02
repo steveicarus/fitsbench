@@ -39,6 +39,7 @@ SOURCES += ftcl_copy.cpp ftcl_crop.cpp ftcl_define_action.cpp ftcl_fft.cpp
 SOURCES += ftcl_fill.cpp
 SOURCES += ftcl_folder.cpp
 SOURCES += ftcl_image.cpp
+SOURCES += ftcl_import.cpp
 SOURCES += ftcl_normalize.cpp ftcl_pixbin.cpp ftcl_scratch.cpp ftcl_stack.cpp ftcl_table.cpp
 
 LIBS += -ltcl
